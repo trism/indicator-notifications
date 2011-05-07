@@ -1,8 +1,0 @@
-src/indicator-datetime.c
-src/datetime-service.c
-src/datetime-prefs.c
-src/datetime-prefs-locations.c
-src/utils.c
-src/settings-shared.h
-[type: gettext/glade]data/datetime-dialog.ui
-data/indicator-datetime-preferences.desktop.in

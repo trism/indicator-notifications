@@ -240,7 +240,6 @@ AM_GLIB_GNU_GETTEXT
 
 AC_OUTPUT([
 Makefile
-libmap/Makefile
 src/Makefile
 data/Makefile
 tests/Makefile

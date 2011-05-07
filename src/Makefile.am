@@ -1,5 +1,4 @@
 
-bin_PROGRAMS = indicator-datetime-preferences
 libexec_PROGRAMS = indicator-datetime-service
 
 indicator_datetime_service_SOURCES = \
@@ -40,25 +39,6 @@ libdatetime_la_LIBADD = \
 libdatetime_la_LDFLAGS = \
 	-module \
 	-avoid-version
-
-indicator_datetime_preferences_SOURCES =\
-	datetime-prefs.c \
-	datetime-prefs-locations.c \
-	datetime-prefs-locations.h \
-	timezone-completion.c \
-	timezone-completion.h \
-	utils.c \
-	utils.h \
-	settings-shared.h
-indicator_datetime_preferences_CFLAGS = \
-	-Wall \
-	-Werror \
-	-I$(top_srcdir)/libmap \
-	$(PREF_CFLAGS) \
-	-DPKGDATADIR="\"$(pkgdatadir)\""
-indicator_datetime_preferences_LDADD = \
-	 $(top_builddir)/libmap/libmap.la \
-	$(PREF_LIBS)
 
 gen-%.xml.c: %.xml
 	@echo "Building $@ from $<"

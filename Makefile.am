@@ -1,10 +1,7 @@
 
 SUBDIRS = \
-	libmap \
 	src \
-	data \
-	tests \
-	po
+	data
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall
 
