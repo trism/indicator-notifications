@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/">
+	<interface name="com.canonical.indicator.datetime.service">
+
+<!-- Methods -->
+
+<!-- Signals -->
+		<signal name="UpdateTime" />
+
+	</interface>
+</node>
