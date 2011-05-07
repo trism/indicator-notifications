@@ -5,8 +5,6 @@ indicator_datetime_service_SOURCES = \
 	datetime-interface.c \
 	datetime-interface.h \
 	gen-datetime-service.xml.c \
-	calendar-menu-item.c \
-	calendar-menu-item.h \
 	datetime-service.c \
 	utils.c \
 	utils.h \
