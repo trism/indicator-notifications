@@ -64,7 +64,7 @@ static IndicatorService * service = NULL;
 static GMainLoop * mainloop = NULL;
 static DbusmenuServer * server = NULL;
 static DbusmenuMenuitem * root = NULL;
-static DatetimeInterface * dbus = NULL;
+static ExampleInterface * dbus = NULL;
 
 /* Global Items */
 static DbusmenuMenuitem * date = NULL;
@@ -103,20 +103,23 @@ struct comp_instance {
 static void
 set_timezone_label (DbusmenuMenuitem * mi, const gchar * location)
 {
-	gchar * zone, * name;
-	split_settings_location (location, &zone, &name);
+	gchar * zone = NULL, * name = NULL;
+	/*split_settings_location (location, &zone, &name);*/
 
 	dbusmenu_menuitem_property_set (mi, TIMEZONE_MENUITEM_PROP_NAME, name);
 	dbusmenu_menuitem_property_set (mi, TIMEZONE_MENUITEM_PROP_ZONE, zone);
 
+        /*
 	g_free (zone);
 	g_free (name);
+        */
 }
 
 static void
 set_current_timezone_label (DbusmenuMenuitem * mi, const gchar * location)
 {
-	gchar * name = get_current_zone_name (location);
+	/*gchar * name = get_current_zone_name (location);*/
+        gchar * name = NULL;
 
 	dbusmenu_menuitem_property_set (mi, TIMEZONE_MENUITEM_PROP_NAME, name);
 	dbusmenu_menuitem_property_set (mi, TIMEZONE_MENUITEM_PROP_ZONE, location);
@@ -311,7 +314,7 @@ quick_set_tz (DbusmenuMenuitem * menuitem, guint timestamp, gpointer user_data)
 
 /* Updates the label in the date menuitem */
 static gboolean
-update_datetime (gpointer user_data)
+update_example (gpointer user_data)
 {
 	g_debug("Updating Date/Time");
 
@@ -652,18 +655,18 @@ populate_appointment_instances (ECalComponent *comp,
 	
 	g_object_ref(comp);
 	
-	ECalComponentDateTime datetime;
+	ECalComponentDateTime example;
 	icaltimezone *appointment_zone = NULL;
 	icaltimezone *current_zone = NULL;
 	
 	if (vtype == E_CAL_COMPONENT_EVENT)
-		e_cal_component_get_dtstart (comp, &datetime);
+		e_cal_component_get_dtstart (comp, &example);
 	else
-	    e_cal_component_get_due (comp, &datetime);
+	    e_cal_component_get_due (comp, &example);
 
-	appointment_zone = icaltimezone_get_builtin_timezone_from_tzid(datetime.tzid);
+	appointment_zone = icaltimezone_get_builtin_timezone_from_tzid(example.tzid);
 	current_zone = icaltimezone_get_builtin_timezone_from_tzid(current_timezone);
-	if (!appointment_zone || datetime.value->is_date) { // If it's today put in the current timezone?
+	if (!appointment_zone || example.value->is_date) { // If it's today put in the current timezone?
 		appointment_zone = current_zone;
 	}
 	
@@ -832,7 +835,8 @@ update_appointment_menu_items (gpointer user_data)
 	} else if (g_strcmp0(time_format_str, "24-hour") == 0) {
 		apt_output = SETTINGS_TIME_24_HOUR;
 	} else {
-		if (is_locale_12h()) {
+		/*if (is_locale_12h()) {*/
+                if (NULL) {
 			apt_output = SETTINGS_TIME_12_HOUR;
 		} else {
 			apt_output = SETTINGS_TIME_24_HOUR;
@@ -1039,13 +1043,13 @@ check_for_timeadmin (gpointer user_data)
 {
 	g_return_val_if_fail (settings != NULL, FALSE);
 
-	gchar * timeadmin = g_find_program_in_path("indicator-datetime-preferences");
+	gchar * timeadmin = g_find_program_in_path("indicator-example-preferences");
 	if (timeadmin != NULL) {
-		g_debug("Found the indicator-datetime-preferences application: %s", timeadmin);
+		g_debug("Found the indicator-example-preferences application: %s", timeadmin);
 		dbusmenu_menuitem_property_set_bool(settings, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		g_free(timeadmin);
 	} else {
-		g_debug("Unable to find indicator-datetime-preferences app.");
+		g_debug("Unable to find indicator-example-preferences app.");
 		dbusmenu_menuitem_property_set_bool(settings, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 	}
 
@@ -1078,7 +1082,7 @@ build_menus (DbusmenuMenuitem * root)
 		dbusmenu_menuitem_property_set_bool(date, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 		dbusmenu_menuitem_child_append(root, date);
 
-		g_idle_add(update_datetime, NULL);
+		g_idle_add(update_example, NULL);
 	}
 
 	if (calendar == NULL) {
@@ -1128,7 +1132,7 @@ build_menus (DbusmenuMenuitem * root)
 	dbusmenu_menuitem_property_set     (settings, DBUSMENU_MENUITEM_PROP_LABEL, _("Time & Date Settings..."));
 	/* insensitive until we check for available apps */
 	dbusmenu_menuitem_property_set_bool(settings, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
-	g_signal_connect(G_OBJECT(settings), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb), "indicator-datetime-preferences");
+	g_signal_connect(G_OBJECT(settings), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb), "indicator-example-preferences");
 	dbusmenu_menuitem_child_append(root, settings);
 	g_idle_add(check_for_timeadmin, NULL);
 
@@ -1140,15 +1144,15 @@ static void
 timezone_changed (GFileMonitor * monitor, GFile * file, GFile * otherfile, GFileMonitorEvent event, gpointer user_data)
 {
 	update_current_timezone();
-	datetime_interface_update(DATETIME_INTERFACE(user_data));
-	update_datetime(NULL);
+	example_interface_update(EXAMPLE_INTERFACE(user_data));
+	update_example(NULL);
 	setup_timer();
 	return;
 }
 
 /* Set up monitoring the timezone file */
 static void
-build_timezone (DatetimeInterface * dbus)
+build_timezone (ExampleInterface * dbus)
 {
 	GFile * timezonefile = g_file_new_for_path(TIMEZONE_FILE);
 	GFileMonitor * monitor = g_file_monitor_file(timezonefile, G_FILE_MONITOR_NONE, NULL, NULL);
@@ -1172,12 +1176,12 @@ timer_func (gpointer user_data)
 	timer = 0;
 	/* Reset up each time to reduce error */
 	setup_timer();
-	update_datetime(NULL);
+	update_example(NULL);
 	return FALSE;
 }
 
 /* Sets up the time to launch the timer to update the
-   date in the datetime entry */
+   date in the example entry */
 static void
 setup_timer (void)
 {
@@ -1207,8 +1211,8 @@ session_active_change_cb (GDBusProxy * proxy, gchar * sender_name, gchar * signa
 		gboolean idle = FALSE;
 		g_variant_get(parameters, "(b)", &idle);
 		if (!idle) {
-			datetime_interface_update(DATETIME_INTERFACE(user_data));
-			update_datetime(NULL);
+			example_interface_update(EXAMPLE_INTERFACE(user_data));
+			update_example(NULL);
 			setup_timer();
 		}
 	}
@@ -1458,7 +1462,7 @@ main (int argc, char ** argv)
 	geoclue_master_create_client_async(master, geo_create_client, NULL);
 
 	/* Setup dbus interface */
-	dbus = g_object_new(DATETIME_INTERFACE_TYPE, NULL);
+	dbus = g_object_new(EXAMPLE_INTERFACE_TYPE, NULL);
 
 	/* Setup timezone watch */
 	build_timezone(dbus);

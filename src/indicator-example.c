@@ -768,9 +768,9 @@ set_label_to_time_in_zone (IndicatorExample * self, GtkLabel * label,
 
 	gchar * timestr;
 	if (format == NULL) {
-		gchar * format_for_time = generate_format_string_at_time(example_now);
-		timestr = g_date_time_format(example_now, format_for_time);
-		g_free(format_for_time);
+		/*gchar * format_for_time = generate_format_string_at_time(example_now); */
+		timestr = g_date_time_format(example_now, "%H:%M");
+		/*g_free(format_for_time);*/
 	}
 	else {
 		timestr = g_date_time_format(example_now, format);
@@ -1130,6 +1130,8 @@ update_text_gravity (GtkWidget *widget, GdkScreen *previous_screen, gpointer dat
 static gchar *
 generate_format_string_now (IndicatorExample * self)
 {
+        return g_strdup("%H:%M");
+        /*
 	if (self->priv->time_mode == SETTINGS_TIME_CUSTOM) {
 		return g_strdup(self->priv->custom_string);
 	}
@@ -1137,6 +1139,7 @@ generate_format_string_now (IndicatorExample * self)
 		return generate_format_string_full(self->priv->show_day,
 		                                   self->priv->show_date);
 	}
+        */
 }
 
 static void

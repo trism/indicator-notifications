@@ -1,11 +1,11 @@
 
-AC_INIT(indicator-datetime, 0.2.3, ted@canonical.com)
+AC_INIT(indicator-example, 0.1.0, ted@canonical.com)
 AC_COPYRIGHT([Copyright 2009,2010 Canonical])
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-datetime, 0.2.3)
+AM_INIT_AUTOMAKE(indicator-example, 0.1.0)
 
 AM_MAINTAINER_MODE
 
@@ -227,7 +227,7 @@ AC_DEFUN([AC_DEFINE_PATH], [
 # Internationalization
 ###########################
 
-GETTEXT_PACKAGE=indicator-datetime
+GETTEXT_PACKAGE=indicator-example
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Name of the default get text domain])
 AC_DEFINE_PATH(GNOMELOCALEDIR, "${datadir}/locale", [locale directory])
@@ -252,7 +252,7 @@ po/Makefile.in
 
 AC_MSG_NOTICE([
 
-Date and Time Indicator Configuration:
+Example Indicator Configuration:
 
 	Prefix:        $prefix
 	Indicator Dir: $INDICATORDIR
