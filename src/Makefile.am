@@ -10,7 +10,6 @@ indicator_example_service_SOURCES = \
 	settings-shared.h
 indicator_example_service_CFLAGS = \
 	-Wall \
-	-Werror \
 	$(SERVICE_CFLAGS) \
 	-DTIMEZONE_FILE="\"/etc/timezone\"" \
 	-DG_LOG_DOMAIN=\"Indicator-Example\"
@@ -26,7 +25,7 @@ libexample_la_SOURCES = \
 	indicator-example.c
 libexample_la_CFLAGS = \
 	$(INDICATOR_CFLAGS) \
-	-Wall -Werror \
+	-Wall \
 	-DG_LOG_DOMAIN=\"Indicator-Example\"
 libexample_la_LIBADD = \
 	$(INDICATOR_LIBS)
