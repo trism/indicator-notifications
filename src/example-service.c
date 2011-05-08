@@ -48,10 +48,9 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libical/icaltime.h>
 #include <cairo/cairo.h>
 
-#include "datetime-interface.h"
+#include "example-interface.h"
 #include "dbus-shared.h"
 #include "settings-shared.h"
-#include "utils.h"
 
 
 static void geo_create_client (GeoclueMaster * master, GeoclueMasterClient * client, gchar * path, GError * error, gpointer user_data);

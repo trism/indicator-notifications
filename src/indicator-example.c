@@ -1,5 +1,5 @@
 /*
-An indicator to time and date related information in the menubar.
+An example indicator.
 
 Copyright 2010 Canonical Ltd.
 
@@ -45,32 +45,31 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libido/libido.h>
 #include <libdbusmenu-gtk/menuitem.h>
 
-#include "utils.h"
 #include "dbus-shared.h"
 #include "settings-shared.h"
 
 
-#define INDICATOR_DATETIME_TYPE            (indicator_datetime_get_type ())
-#define INDICATOR_DATETIME(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_DATETIME_TYPE, IndicatorDatetime))
-#define INDICATOR_DATETIME_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), INDICATOR_DATETIME_TYPE, IndicatorDatetimeClass))
-#define IS_INDICATOR_DATETIME(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), INDICATOR_DATETIME_TYPE))
-#define IS_INDICATOR_DATETIME_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), INDICATOR_DATETIME_TYPE))
-#define INDICATOR_DATETIME_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), INDICATOR_DATETIME_TYPE, IndicatorDatetimeClass))
+#define INDICATOR_EXAMPLE_TYPE            (indicator_example_get_type ())
+#define INDICATOR_EXAMPLE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_EXAMPLE_TYPE, IndicatorExample))
+#define INDICATOR_EXAMPLE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), INDICATOR_EXAMPLE_TYPE, IndicatorExampleClass))
+#define IS_INDICATOR_EXAMPLE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), INDICATOR_EXAMPLE_TYPE))
+#define IS_INDICATOR_EXAMPLE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), INDICATOR_EXAMPLE_TYPE))
+#define INDICATOR_EXAMPLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), INDICATOR_EXAMPLE_TYPE, IndicatorExampleClass))
 
-typedef struct _IndicatorDatetime         IndicatorDatetime;
-typedef struct _IndicatorDatetimeClass    IndicatorDatetimeClass;
-typedef struct _IndicatorDatetimePrivate  IndicatorDatetimePrivate;
+typedef struct _IndicatorExample         IndicatorExample;
+typedef struct _IndicatorExampleClass    IndicatorExampleClass;
+typedef struct _IndicatorExamplePrivate  IndicatorExamplePrivate;
 
-struct _IndicatorDatetimeClass {
+struct _IndicatorExampleClass {
 	IndicatorObjectClass parent_class;
 };
 
-struct _IndicatorDatetime {
+struct _IndicatorExample {
 	IndicatorObject parent;
-	IndicatorDatetimePrivate * priv;
+	IndicatorExamplePrivate * priv;
 };
 
-struct _IndicatorDatetimePrivate {
+struct _IndicatorExamplePrivate {
 	GtkLabel * label;
 	guint timer;
 
@@ -121,7 +120,7 @@ enum {
 
 typedef struct _indicator_item_t indicator_item_t;
 struct _indicator_item_t {
-	IndicatorDatetime * self;
+	IndicatorExample * self;
 	DbusmenuMenuitem * mi;
 	GtkWidget * gmi;
 	GtkWidget * icon;
@@ -138,8 +137,8 @@ struct _indicator_item_t {
 #define PROP_SHOW_WEEK_NUMBERS_S        "show-week-numbers"
 #define PROP_SHOW_CALENDAR_S            "show-calendar"
 
-#define INDICATOR_DATETIME_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_DATETIME_TYPE, IndicatorDatetimePrivate))
+#define INDICATOR_EXAMPLE_GET_PRIVATE(o) \
+(G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_EXAMPLE_TYPE, IndicatorExamplePrivate))
 
 enum {
 	STRFTIME_MASK_NONE    = 0,      /* Hours or minutes as we always test those */
@@ -153,24 +152,24 @@ enum {
 	STRFTIME_MASK_ALL     = (STRFTIME_MASK_SECONDS | STRFTIME_MASK_AMPM | STRFTIME_MASK_WEEK | STRFTIME_MASK_DAY | STRFTIME_MASK_MONTH | STRFTIME_MASK_YEAR)
 };
 
-GType indicator_datetime_get_type (void);
+GType indicator_example_get_type (void);
 
-static void indicator_datetime_class_init (IndicatorDatetimeClass *klass);
-static void indicator_datetime_init       (IndicatorDatetime *self);
+static void indicator_example_class_init (IndicatorExampleClass *klass);
+static void indicator_example_init       (IndicatorExample *self);
 static void set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec);
 static void get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec);
-static void indicator_datetime_dispose    (GObject *object);
-static void indicator_datetime_finalize   (GObject *object);
+static void indicator_example_dispose    (GObject *object);
+static void indicator_example_finalize   (GObject *object);
 static GtkLabel * get_label               (IndicatorObject * io);
 static GtkMenu *  get_menu                (IndicatorObject * io);
 static const gchar * get_accessible_desc  (IndicatorObject * io);
 static GVariant * bind_enum_set           (const GValue * value, const GVariantType * type, gpointer user_data);
 static gboolean bind_enum_get             (GValue * value, GVariant * variant, gpointer user_data);
-static gchar * generate_format_string_now (IndicatorDatetime * self);
-static void update_label                  (IndicatorDatetime * io, GDateTime ** datetime);
-static void guess_label_size              (IndicatorDatetime * self);
-static void setup_timer                   (IndicatorDatetime * self, GDateTime * datetime);
-static void update_time                   (IndicatorDatetime * self);
+static gchar * generate_format_string_now (IndicatorExample * self);
+static void update_label                  (IndicatorExample * io, GDateTime ** example);
+static void guess_label_size              (IndicatorExample * self);
+static void setup_timer                   (IndicatorExample * self, GDateTime * example);
+static void update_time                   (IndicatorExample * self);
 static void receive_signal                (GDBusProxy * proxy, gchar * sender_name, gchar * signal_name, GVariant * parameters, gpointer user_data);
 static void service_proxy_cb (GObject * object, GAsyncResult * res, gpointer user_data);
 static gint generate_strftime_bitmask     (const char *time_str);
@@ -181,19 +180,19 @@ static gboolean new_timezone_item         (DbusmenuMenuitem * newitem, DbusmenuM
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
-INDICATOR_SET_TYPE(INDICATOR_DATETIME_TYPE)
+INDICATOR_SET_TYPE(INDICATOR_EXAMPLE_TYPE)
 
-G_DEFINE_TYPE (IndicatorDatetime, indicator_datetime, INDICATOR_OBJECT_TYPE);
+G_DEFINE_TYPE (IndicatorExample, indicator_example, INDICATOR_OBJECT_TYPE);
 
 static void
-indicator_datetime_class_init (IndicatorDatetimeClass *klass)
+indicator_example_class_init (IndicatorExampleClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	g_type_class_add_private (klass, sizeof (IndicatorDatetimePrivate));
+	g_type_class_add_private (klass, sizeof (IndicatorExamplePrivate));
 
-	object_class->dispose = indicator_datetime_dispose;
-	object_class->finalize = indicator_datetime_finalize;
+	object_class->dispose = indicator_example_dispose;
+	object_class->finalize = indicator_example_finalize;
 
 	object_class->set_property = set_property;
 	object_class->get_property = get_property;
@@ -208,7 +207,7 @@ indicator_datetime_class_init (IndicatorDatetimeClass *klass)
 	                                 PROP_SHOW_CLOCK,
 	                                 g_param_spec_boolean(PROP_SHOW_CLOCK_S,
 	                                                      "Whether to show the clock in the menu bar.",
-	                                                      "Shows indicator-datetime in the shell's menu bar.",
+	                                                      "Shows indicator-example in the shell's menu bar.",
 	                                                      TRUE, /* default */
 	                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property (object_class,
@@ -253,14 +252,14 @@ indicator_datetime_class_init (IndicatorDatetimeClass *klass)
 	                                 PROP_SHOW_WEEK_NUMBERS,
 	                                 g_param_spec_boolean(PROP_SHOW_WEEK_NUMBERS_S,
 	                                                      "Whether to show the week numbers in the calendar.",
-	                                                      "Shows the week numbers in the monthly calendar in indicator-datetime's menu.",
+	                                                      "Shows the week numbers in the monthly calendar in indicator-example's menu.",
 	                                                      FALSE, /* default */
 	                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	g_object_class_install_property (object_class,
 	                                 PROP_SHOW_CALENDAR,
 	                                 g_param_spec_boolean(PROP_SHOW_CALENDAR_S,
 	                                                      "Whether to show the calendar.",
-	                                                      "Shows the monthly calendar in indicator-datetime's menu.",
+	                                                      "Shows the monthly calendar in indicator-example's menu.",
 	                                                      TRUE, /* default */
 	                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 	return;
@@ -269,7 +268,7 @@ indicator_datetime_class_init (IndicatorDatetimeClass *klass)
 static void
 menu_visible_notfy_cb(GtkWidget * menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
 	g_debug("notify visible signal recieved");
 	
 	// we should only react if we're currently visible
@@ -296,9 +295,9 @@ menu_visible_notfy_cb(GtkWidget * menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
 }
 
 static void
-indicator_datetime_init (IndicatorDatetime *self)
+indicator_example_init (IndicatorExample *self)
 {
-	self->priv = INDICATOR_DATETIME_GET_PRIVATE(self);
+	self->priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 
 	self->priv->label = NULL;
 	self->priv->timer = 0;
@@ -405,12 +404,12 @@ service_proxy_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 {
 	GError * error = NULL;
 
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
 	g_return_if_fail(self != NULL);
 
 	GDBusProxy * proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
 
-	IndicatorDatetimePrivate * priv = INDICATOR_DATETIME_GET_PRIVATE(self);
+	IndicatorExamplePrivate * priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 
 	if (priv->service_proxy_cancel != NULL) {
 		g_object_unref(priv->service_proxy_cancel);
@@ -433,9 +432,9 @@ service_proxy_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 }
 
 static void
-indicator_datetime_dispose (GObject *object)
+indicator_example_dispose (GObject *object)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(object);
+	IndicatorExample * self = INDICATOR_EXAMPLE(object);
 
 	if (self->priv->label != NULL) {
 		g_object_unref(self->priv->label);
@@ -477,14 +476,14 @@ indicator_datetime_dispose (GObject *object)
 		self->priv->indicator_right_group = NULL;
 	}
 
-	G_OBJECT_CLASS (indicator_datetime_parent_class)->dispose (object);
+	G_OBJECT_CLASS (indicator_example_parent_class)->dispose (object);
 	return;
 }
 
 static void
-indicator_datetime_finalize (GObject *object)
+indicator_example_finalize (GObject *object)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(object);
+	IndicatorExample * self = INDICATOR_EXAMPLE(object);
 
 	if (self->priv->time_string != NULL) {
 		g_free(self->priv->time_string);
@@ -496,7 +495,7 @@ indicator_datetime_finalize (GObject *object)
 		self->priv->custom_string = NULL;
 	}
 
-	G_OBJECT_CLASS (indicator_datetime_parent_class)->finalize (object);
+	G_OBJECT_CLASS (indicator_example_parent_class)->finalize (object);
 	return;
 }
 
@@ -542,9 +541,9 @@ bind_enum_get (GValue * value, GVariant * variant, gpointer user_data)
 }
 
 static void
-timezone_update_all_labels (IndicatorDatetime * self)
+timezone_update_all_labels (IndicatorExample * self)
 {
-	IndicatorDatetimePrivate *priv = INDICATOR_DATETIME_GET_PRIVATE(self);
+	IndicatorExamplePrivate *priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 	g_list_foreach(priv->timezone_items, (GFunc)timezone_update_labels, NULL);
 }
 
@@ -552,7 +551,7 @@ timezone_update_all_labels (IndicatorDatetime * self)
 static void
 set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(object);
+	IndicatorExample * self = INDICATOR_EXAMPLE(object);
 	gboolean update = FALSE;
 
 	switch(prop_id) {
@@ -678,7 +677,7 @@ set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec 
 static void
 get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(object);
+	IndicatorExample * self = INDICATOR_EXAMPLE(object);
 
 	switch(prop_id) {
 	case PROP_SHOW_CLOCK:
@@ -718,7 +717,7 @@ get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspe
 static gboolean
 idle_measure (gpointer data)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(data);
 	self->priv->idle_measure = 0;
 
 	GtkAllocation allocation;
@@ -737,7 +736,7 @@ idle_measure (gpointer data)
 
 /* Updates the accessible description */
 static void
-update_accessible_description (IndicatorDatetime * io)
+update_accessible_description (IndicatorExample * io)
 {
 	GList * entries = indicator_object_get_entries(INDICATOR_OBJECT(io));
 	IndicatorObjectEntry * entry = (IndicatorObjectEntry *)entries->data;
@@ -757,24 +756,24 @@ update_accessible_description (IndicatorDatetime * io)
 
 /* Updates the label to be the current time. */
 static void
-set_label_to_time_in_zone (IndicatorDatetime * self, GtkLabel * label,
+set_label_to_time_in_zone (IndicatorExample * self, GtkLabel * label,
                            GTimeZone * tz, const gchar * format,
-                           GDateTime ** datetime)
+                           GDateTime ** example)
 {
-	GDateTime * datetime_now;
+	GDateTime * example_now;
 	if (tz == NULL)
-		datetime_now = g_date_time_new_now_local();
+		example_now = g_date_time_new_now_local();
 	else
-		datetime_now = g_date_time_new_now(tz);
+		example_now = g_date_time_new_now(tz);
 
 	gchar * timestr;
 	if (format == NULL) {
-		gchar * format_for_time = generate_format_string_at_time(datetime_now);
-		timestr = g_date_time_format(datetime_now, format_for_time);
+		gchar * format_for_time = generate_format_string_at_time(example_now);
+		timestr = g_date_time_format(example_now, format_for_time);
 		g_free(format_for_time);
 	}
 	else {
-		timestr = g_date_time_format(datetime_now, format);
+		timestr = g_date_time_format(example_now, format);
 	}
 
 	gboolean use_markup = FALSE;
@@ -788,23 +787,23 @@ set_label_to_time_in_zone (IndicatorDatetime * self, GtkLabel * label,
 
 	g_free(timestr);
 
-	if (datetime)
-		*datetime = datetime_now;
+	if (example)
+		*example = example_now;
 	else
-		g_date_time_unref(datetime_now);
+		g_date_time_unref(example_now);
 
 	return;
 }
 
 /* Updates the label to be the current time. */
 static void
-update_label (IndicatorDatetime * io, GDateTime ** datetime)
+update_label (IndicatorExample * io, GDateTime ** example)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(io);
+	IndicatorExample * self = INDICATOR_EXAMPLE(io);
 
 	if (self->priv->label == NULL) return;
 
-	set_label_to_time_in_zone(self, self->priv->label, NULL, self->priv->time_string, datetime);
+	set_label_to_time_in_zone(self, self->priv->label, NULL, self->priv->time_string, example);
 
 	if (self->priv->idle_measure == 0) {
 		self->priv->idle_measure = g_idle_add(idle_measure, io);
@@ -817,7 +816,7 @@ update_label (IndicatorDatetime * io, GDateTime ** datetime)
 
 /* Update the time right now.  Usually the result of a timezone switch. */
 static void
-update_time (IndicatorDatetime * self)
+update_time (IndicatorExample * self)
 {
 	GDateTime * dt;
 	update_label(self, &dt);
@@ -832,7 +831,7 @@ static void
 receive_signal (GDBusProxy * proxy, gchar * sender_name, gchar * signal_name,
                 GVariant * parameters, gpointer user_data)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
 
 	if (g_strcmp0(signal_name, "UpdateTime") == 0) {
 		update_time(self);
@@ -845,7 +844,7 @@ receive_signal (GDBusProxy * proxy, gchar * sender_name, gchar * signal_name,
 gboolean
 timer_func (gpointer user_data)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
 	self->priv->timer = 0;
 	GDateTime * dt;
 	update_label(self, &dt);
@@ -857,7 +856,7 @@ timer_func (gpointer user_data)
 
 /* Configure the timer to run the next time through */
 static void
-setup_timer (IndicatorDatetime * self, GDateTime * datetime)
+setup_timer (IndicatorExample * self, GDateTime * example)
 {
 	gboolean unref = FALSE;
 
@@ -870,17 +869,17 @@ setup_timer (IndicatorDatetime * self, GDateTime * datetime)
 		(self->priv->time_mode == SETTINGS_TIME_CUSTOM && self->priv->custom_show_seconds)) {
 		self->priv->timer = g_timeout_add_full(G_PRIORITY_HIGH, 999, timer_func, self, NULL);
 	} else {
-		if (datetime == NULL) {
-			datetime = g_date_time_new_now_local();
+		if (example == NULL) {
+			example = g_date_time_new_now_local();
 			unref = TRUE;
 		}
 
 		/* Plus 2 so we're just after the minute, don't want to be early. */
-		gint seconds = (gint)g_date_time_get_seconds(datetime);
+		gint seconds = (gint)g_date_time_get_seconds(example);
 		self->priv->timer = g_timeout_add_seconds(60 - seconds + 2, timer_func, self);
 
 		if (unref) {
-			g_date_time_unref(datetime);
+			g_date_time_unref(example);
 		}
 	}
 
@@ -1060,7 +1059,7 @@ build_timeval_array (GArray * timevals, gint mask)
 /* Try to get a good guess at what a maximum width of the entire
    string would be. */
 static void
-guess_label_size (IndicatorDatetime * self)
+guess_label_size (IndicatorExample * self)
 {
 	/* This is during startup. */
 	if (self->priv->label == NULL) return;
@@ -1106,7 +1105,7 @@ static void
 style_changed (GtkWidget * widget, GtkStyle * oldstyle, gpointer data)
 {
 	g_debug("New style for time label");
-	IndicatorDatetime * self = INDICATOR_DATETIME(data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(data);
 	guess_label_size(self);
 	update_label(self, NULL);
 	timezone_update_all_labels(self);
@@ -1117,7 +1116,7 @@ style_changed (GtkWidget * widget, GtkStyle * oldstyle, gpointer data)
 static void
 update_text_gravity (GtkWidget *widget, GdkScreen *previous_screen, gpointer data)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(data);
 	if (self->priv->label == NULL) return;
 
 	PangoLayout  *layout;
@@ -1129,7 +1128,7 @@ update_text_gravity (GtkWidget *widget, GdkScreen *previous_screen, gpointer dat
 }
 
 static gchar *
-generate_format_string_now (IndicatorDatetime * self)
+generate_format_string_now (IndicatorExample * self)
 {
 	if (self->priv->time_mode == SETTINGS_TIME_CUSTOM) {
 		return g_strdup(self->priv->custom_string);
@@ -1239,9 +1238,9 @@ new_appointment_item (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, Dbu
 {
 	g_return_val_if_fail(DBUSMENU_IS_MENUITEM(newitem), FALSE);
 	g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
-	g_return_val_if_fail(IS_INDICATOR_DATETIME(user_data), FALSE);
+	g_return_val_if_fail(IS_INDICATOR_EXAMPLE(user_data), FALSE);
 	/* Note: not checking parent, it's reasonable for it to be NULL */
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
 
 	indicator_item_t * mi_data = g_new0(indicator_item_t, 1);
 
@@ -1375,11 +1374,11 @@ new_calendar_item (DbusmenuMenuitem * newitem,
 	g_debug("New calendar item");
 	g_return_val_if_fail(DBUSMENU_IS_MENUITEM(newitem), FALSE);
 	g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
-	g_return_val_if_fail(IS_INDICATOR_DATETIME(user_data), FALSE);
+	g_return_val_if_fail(IS_INDICATOR_EXAMPLE(user_data), FALSE);
 	/* Note: not checking parent, it's reasonable for it to be NULL */
 
-	IndicatorDatetime *self = INDICATOR_DATETIME(user_data);
-	self->priv = INDICATOR_DATETIME_GET_PRIVATE(self);
+	IndicatorExample *self = INDICATOR_EXAMPLE(user_data);
+	self->priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 	
 	IdoCalendarMenuItem *ido = IDO_CALENDAR_MENU_ITEM (ido_calendar_menu_item_new ());
 	self->priv->ido_calendar = ido;
@@ -1424,7 +1423,7 @@ timezone_toggled_cb (GtkCheckMenuItem *checkmenuitem, DbusmenuMenuitem * dbusite
 static void
 timezone_destroyed_cb (indicator_item_t * mi_data, DbusmenuMenuitem * dbusitem)
 {
-	IndicatorDatetimePrivate *priv = INDICATOR_DATETIME_GET_PRIVATE(mi_data->self);
+	IndicatorExamplePrivate *priv = INDICATOR_EXAMPLE_GET_PRIVATE(mi_data->self);
 	priv->timezone_items = g_list_remove(priv->timezone_items, mi_data);
 	g_signal_handlers_disconnect_by_func(G_OBJECT(mi_data->gmi), G_CALLBACK(timezone_toggled_cb), dbusitem);
 	g_free(mi_data);
@@ -1438,11 +1437,11 @@ new_timezone_item(DbusmenuMenuitem * newitem,
 {
 	g_return_val_if_fail(DBUSMENU_IS_MENUITEM(newitem), FALSE);
 	g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
-	g_return_val_if_fail(IS_INDICATOR_DATETIME(user_data), FALSE);
+	g_return_val_if_fail(IS_INDICATOR_EXAMPLE(user_data), FALSE);
 	/* Note: not checking parent, it's reasonable for it to be NULL */
 
-	IndicatorDatetime * self = INDICATOR_DATETIME(user_data);
-	IndicatorDatetimePrivate *priv = INDICATOR_DATETIME_GET_PRIVATE(self);
+	IndicatorExample * self = INDICATOR_EXAMPLE(user_data);
+	IndicatorExamplePrivate *priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 
 	// Menu item with a radio button and a right aligned time
 	indicator_item_t * mi_data = g_new0(indicator_item_t, 1);
@@ -1492,7 +1491,7 @@ new_timezone_item(DbusmenuMenuitem * newitem,
 static GtkLabel *
 get_label (IndicatorObject * io)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(io);
+	IndicatorExample * self = INDICATOR_EXAMPLE(io);
 
 	/* If there's not a label, we'll build ourselves one */
 	if (self->priv->label == NULL) {
@@ -1516,7 +1515,7 @@ get_label (IndicatorObject * io)
 static GtkMenu *
 get_menu (IndicatorObject * io)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(io);
+	IndicatorExample * self = INDICATOR_EXAMPLE(io);
 
 	return GTK_MENU(self->priv->menu);
 }
@@ -1524,7 +1523,7 @@ get_menu (IndicatorObject * io)
 static const gchar *
 get_accessible_desc (IndicatorObject * io)
 {
-	IndicatorDatetime * self = INDICATOR_DATETIME(io);
+	IndicatorExample * self = INDICATOR_EXAMPLE(io);
 	const gchar * name;
 
 	if (self->priv->label != NULL) {

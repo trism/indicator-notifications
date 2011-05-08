@@ -1,40 +1,36 @@
 
-libexec_PROGRAMS = indicator-datetime-service
+libexec_PROGRAMS = indicator-example-service
 
-indicator_datetime_service_SOURCES = \
-	datetime-interface.c \
-	datetime-interface.h \
-	gen-datetime-service.xml.c \
-	datetime-service.c \
-	utils.c \
-	utils.h \
+indicator_example_service_SOURCES = \
+	example-interface.c \
+	example-interface.h \
+	gen-example-service.xml.c \
+	example-service.c \
 	dbus-shared.h \
 	settings-shared.h
-indicator_datetime_service_CFLAGS = \
+indicator_example_service_CFLAGS = \
 	-Wall \
 	-Werror \
 	$(SERVICE_CFLAGS) \
 	-DTIMEZONE_FILE="\"/etc/timezone\"" \
-	-DG_LOG_DOMAIN=\"Indicator-Datetime\"
-indicator_datetime_service_LDADD = \
+	-DG_LOG_DOMAIN=\"Indicator-Example\"
+indicator_example_service_LDADD = \
 	$(SERVICE_LIBS)
 
-datetimelibdir = $(INDICATORDIR)
-datetimelib_LTLIBRARIES = libdatetime.la
-libdatetime_la_SOURCES = \
-	gen-datetime-service.xml.h \
+examplelibdir = $(INDICATORDIR)
+examplelib_LTLIBRARIES = libexample.la
+libexample_la_SOURCES = \
+	gen-example-service.xml.h \
 	dbus-shared.h \
 	settings-shared.h \
-	utils.c \
-	utils.h \
-	indicator-datetime.c
-libdatetime_la_CFLAGS = \
+	indicator-example.c
+libexample_la_CFLAGS = \
 	$(INDICATOR_CFLAGS) \
 	-Wall -Werror \
-	-DG_LOG_DOMAIN=\"Indicator-Datetime\"
-libdatetime_la_LIBADD = \
+	-DG_LOG_DOMAIN=\"Indicator-Example\"
+libexample_la_LIBADD = \
 	$(INDICATOR_LIBS)
-libdatetime_la_LDFLAGS = \
+libexample_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
@@ -49,12 +45,12 @@ gen-%.xml.h: %.xml
 	@echo "extern const char * _$(subst -,_,$(subst .,_,$(basename $<)));" > $@
 
 BUILT_SOURCES = \
-	gen-datetime-service.xml.c \
-	gen-datetime-service.xml.h
+	gen-example-service.xml.c \
+	gen-example-service.xml.h
 
 
 CLEANFILES = \
 	$(BUILT_SOURCES)
 
 EXTRA_DIST = \
-	datetime-service.xml
+	example-service.xml
