@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <node name="/">
-	<interface name="com.canonical.indicator.datetime.service">
+	<interface name="com.example.indicator.example.service">
 
 <!-- Methods -->
 

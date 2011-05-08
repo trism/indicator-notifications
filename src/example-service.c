@@ -1,5 +1,5 @@
 /*
-An indicator to time and date related information in the menubar.
+An example indicator.
 
 Copyright 2010 Canonical Ltd.
 
