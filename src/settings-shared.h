@@ -22,6 +22,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __EXAMPLE_SETTINGS_SHARED_H__
 #define __EXAMPLE_SETTINGS_SHARED_H__
 
-#define SETTINGS_INTERFACE              "com.example.indicator.example"
+#define SETTINGS_INTERFACE "com.example.indicator.example"
 
 #endif

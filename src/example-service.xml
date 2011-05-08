@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <node name="/">
-	<interface name="com.example.indicator.example.service">
+  <interface name="com.example.indicator.example.service">
 
 <!-- Methods -->
 
 <!-- Signals -->
 
-	</interface>
+  </interface>
 </node>
