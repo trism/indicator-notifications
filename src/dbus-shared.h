@@ -26,17 +26,3 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define  SERVICE_VERSION  1
 
 #define  MENU_OBJ      "/com/example/indicator/example/menu"
-
-#define DBUSMENU_CALENDAR_MENUITEM_TYPE    "x-example-calendar-item"
-
-#define CALENDAR_MENUITEM_PROP_MARKS       "calendar-marks"
-
-#define APPOINTMENT_MENUITEM_TYPE          "appointment-item"	
-#define APPOINTMENT_MENUITEM_PROP_LABEL    "appointment-label"
-#define APPOINTMENT_MENUITEM_PROP_ICON     "appointment-icon"
-#define APPOINTMENT_MENUITEM_PROP_RIGHT    "appointment-time"
-
-#define TIMEZONE_MENUITEM_TYPE             "timezone-item"	
-#define TIMEZONE_MENUITEM_PROP_ZONE        "timezone-zone"	
-#define TIMEZONE_MENUITEM_PROP_NAME        "timezone-name"
-#define TIMEZONE_MENUITEM_PROP_RADIO       "timezone-radio"
