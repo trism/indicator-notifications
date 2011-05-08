@@ -39,15 +39,15 @@ typedef struct _ExampleInterfacePrivate ExampleInterfacePrivate;
 typedef struct _ExampleInterfaceClass   ExampleInterfaceClass;
 
 struct _ExampleInterfaceClass {
-	GObjectClass parent_class;
+  GObjectClass parent_class;
 };
 
 struct _ExampleInterface {
-	GObject parent;
-	ExampleInterfacePrivate * priv;
+  GObject parent;
+  ExampleInterfacePrivate *priv;
 };
 
-GType              example_interface_get_type       (void);
+GType example_interface_get_type(void);
 
 G_END_DECLS
 

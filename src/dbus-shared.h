@@ -19,10 +19,9 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define SERVICE_NAME    "com.example.indicator.example"
+#define SERVICE_IFACE   "com.example.indicator.example.service"
+#define SERVICE_OBJ     "/com/example/indicator/example/service"
+#define SERVICE_VERSION 1
 
-#define  SERVICE_NAME     "com.example.indicator.example"
-#define  SERVICE_IFACE    "com.example.indicator.example.service"
-#define  SERVICE_OBJ      "/com/example/indicator/example/service"
-#define  SERVICE_VERSION  1
-
-#define  MENU_OBJ      "/com/example/indicator/example/menu"
+#define MENU_OBJ        "/com/example/indicator/example/menu"
