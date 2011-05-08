@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKG_NAME="indicator-datetime"
+PKG_NAME="indicator-example"
 
 which gnome-autogen.sh || {
 	echo "You need gnome-common from GNOME Git"
