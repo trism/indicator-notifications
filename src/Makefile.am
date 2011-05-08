@@ -11,7 +11,6 @@ indicator_example_service_SOURCES = \
 indicator_example_service_CFLAGS = \
 	-Wall \
 	$(SERVICE_CFLAGS) \
-	-DTIMEZONE_FILE="\"/etc/timezone\"" \
 	-DG_LOG_DOMAIN=\"Indicator-Example\"
 indicator_example_service_LDADD = \
 	$(SERVICE_LIBS)

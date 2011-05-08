@@ -181,27 +181,3 @@ example_interface_finalize (GObject *object)
 	return;
 }
 
-void
-example_interface_update (ExampleInterface *self)
-{
-	g_return_if_fail(IS_EXAMPLE_INTERFACE(self));
-
-	ExampleInterfacePrivate * priv = EXAMPLE_INTERFACE_GET_PRIVATE(self);
-	GError * error = NULL;
-
-	g_dbus_connection_emit_signal (priv->bus,
-	                               NULL,
-	                               SERVICE_OBJ,
-	                               SERVICE_IFACE,
-	                               "UpdateTime",
-	                               NULL,
-	                               &error);
-
-	if (error != NULL) {
-		g_error("Unable to send UpdateTime signal: %s", error->message);
-		g_error_free(error);
-		return;
-	}
-
-	return;
-}

@@ -40,8 +40,6 @@ typedef struct _ExampleInterfaceClass   ExampleInterfaceClass;
 
 struct _ExampleInterfaceClass {
 	GObjectClass parent_class;
-
-	void (*update_time) (void);
 };
 
 struct _ExampleInterface {
@@ -50,7 +48,6 @@ struct _ExampleInterface {
 };
 
 GType              example_interface_get_type       (void);
-void               example_interface_update         (ExampleInterface *self);
 
 G_END_DECLS
 
