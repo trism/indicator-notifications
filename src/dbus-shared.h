@@ -1,10 +1,10 @@
 /*
-An indicator to show date and time information.
+An example indicator.
 
 Copyright 2010 Canonical Ltd.
 
 Authors:
-    Ted Gould <ted@canonical.com>
+    Ted Gould <ted@example.com>
 
 This program is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License version 3, as published 
@@ -20,14 +20,14 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#define  SERVICE_NAME     "com.canonical.indicator.datetime"
-#define  SERVICE_IFACE    "com.canonical.indicator.datetime.service"
-#define  SERVICE_OBJ      "/com/canonical/indicator/datetime/service"
+#define  SERVICE_NAME     "com.example.indicator.example"
+#define  SERVICE_IFACE    "com.example.indicator.example.service"
+#define  SERVICE_OBJ      "/com/example/indicator/example/service"
 #define  SERVICE_VERSION  1
 
-#define  MENU_OBJ      "/com/canonical/indicator/datetime/menu"
+#define  MENU_OBJ      "/com/example/indicator/example/menu"
 
-#define DBUSMENU_CALENDAR_MENUITEM_TYPE    "x-canonical-calendar-item"
+#define DBUSMENU_CALENDAR_MENUITEM_TYPE    "x-example-calendar-item"
 
 #define CALENDAR_MENUITEM_PROP_MARKS       "calendar-marks"
 
