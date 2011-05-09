@@ -76,8 +76,6 @@ struct _IndicatorExamplePrivate {
 
   GCancellable *service_proxy_cancel;
   GDBusProxy *service_proxy;
-
-  GtkSizeGroup *indicator_right_group;
 };
 
 typedef struct _indicator_item_t indicator_item_t;
@@ -85,9 +83,7 @@ struct _indicator_item_t {
   IndicatorExample *self;
   DbusmenuMenuitem *mi;
   GtkWidget *gmi;
-  GtkWidget *icon;
   GtkWidget *label;
-  GtkWidget *right;
 };
 
 #define INDICATOR_EXAMPLE_GET_PRIVATE(o) \
@@ -157,7 +153,6 @@ indicator_example_init(IndicatorExample *self)
   self->priv->menu = NULL;
 
   self->priv->sm = indicator_service_manager_new_version(SERVICE_NAME, SERVICE_VERSION);
-  self->priv->indicator_right_group = GTK_SIZE_GROUP(gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL));
 
   self->priv->menu = dbusmenu_gtkmenu_new(SERVICE_NAME, MENU_OBJ);
 
@@ -238,11 +233,6 @@ indicator_example_dispose(GObject *object)
   if(self->priv->service_proxy != NULL) {
     g_object_unref(self->priv->service_proxy);
     self->priv->service_proxy = NULL;
-  }
-
-  if(self->priv->indicator_right_group != NULL) {
-    g_object_unref(G_OBJECT(self->priv->indicator_right_group));
-    self->priv->indicator_right_group = NULL;
   }
 
   G_OBJECT_CLASS (indicator_example_parent_class)->dispose (object);
