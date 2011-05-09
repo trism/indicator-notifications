@@ -20,7 +20,7 @@ AC_PROG_LIBTOOL
 AC_SUBST(VERSION)
 AC_CONFIG_MACRO_DIR([m4])
 
-#m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_ARG_ENABLE([deprecations],
   [AS_HELP_STRING([--enable-deprecations],
