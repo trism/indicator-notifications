@@ -74,16 +74,16 @@ struct _IndicatorExamplePrivate {
   IndicatorServiceManager *sm;
   DbusmenuGtkMenu *menu;
 
+  gint current_state;
+
   GCancellable *service_proxy_cancel;
   GDBusProxy *service_proxy;
 };
 
-typedef struct _indicator_item_t indicator_item_t;
-struct _indicator_item_t {
-  IndicatorExample *self;
-  DbusmenuMenuitem *mi;
-  GtkWidget *gmi;
-  GtkWidget *label;
+enum {
+  STATE_NORMAL,
+  STATE_SHOWN,
+  STATE_HIDDEN
 };
 
 #define INDICATOR_EXAMPLE_GET_PRIVATE(o) \
@@ -136,8 +136,14 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
   // we should only react if we're currently visible
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
-  if (visible) return;
-  g_debug("notify visible menu hidden");
+  if(visible) {
+    self->priv->current_state = STATE_SHOWN;
+  }
+  else {
+    g_debug("notify visible menu hidden");
+    self->priv->current_state = STATE_HIDDEN;
+  }
+  update_label(self);
 }
 
 static void
@@ -146,6 +152,8 @@ indicator_example_init(IndicatorExample *self)
   self->priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
 
   self->priv->label = NULL;
+
+  self->priv->current_state = STATE_NORMAL;
 
   self->priv->service_proxy = NULL;
 
@@ -158,7 +166,7 @@ indicator_example_init(IndicatorExample *self)
 
   g_signal_connect(self->priv->menu, "notify::visible", G_CALLBACK(menu_visible_notify_cb), self);
 
-  DbusmenuGtkClient *client = dbusmenu_gtkmenu_get_client(self->priv->menu);
+  /*DbusmenuGtkClient *client = dbusmenu_gtkmenu_get_client(self->priv->menu);*/
 
   self->priv->service_proxy_cancel = g_cancellable_new();
 
@@ -242,7 +250,7 @@ indicator_example_dispose(GObject *object)
 static void
 indicator_example_finalize(GObject *object)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(object);
+  /*IndicatorExample *self = INDICATOR_EXAMPLE(object);*/
 
   G_OBJECT_CLASS (indicator_example_parent_class)->finalize (object);
   return;
@@ -276,7 +284,16 @@ update_label(IndicatorExample *io)
 
   if(self->priv->label == NULL) return;
 
-  gtk_label_set_text(self->priv->label, "Example");
+  switch(self->priv->current_state) {
+    case STATE_HIDDEN:
+      gtk_label_set_text(self->priv->label, "Hidden");
+      break;
+    case STATE_SHOWN:
+      gtk_label_set_text(self->priv->label, "Shown");
+      break;
+    default:
+      gtk_label_set_text(self->priv->label, "Example");
+  }
 
   update_accessible_description(io);
 
@@ -288,7 +305,7 @@ static void
 receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
                GVariant *parameters, gpointer user_data)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(user_data);
+  /*IndicatorExample *self = INDICATOR_EXAMPLE(user_data);*/
 
   return;
 }
