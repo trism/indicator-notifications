@@ -136,6 +136,7 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
   // we should only react if we're currently visible
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
+  /*
   if(visible) {
     self->priv->current_state = STATE_SHOWN;
   }
@@ -143,6 +144,7 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
     g_debug("notify visible menu hidden");
     self->priv->current_state = STATE_HIDDEN;
   }
+  */
   update_label(self);
 }
 
