@@ -47,19 +47,37 @@ static ExampleInterface *dbus = NULL;
 static DbusmenuMenuitem *item_1 = NULL;
 static DbusmenuMenuitem *item_2 = NULL;
 
+/* Test the item activation signal */
+static void
+activate_cb(DbusmenuMenuitem *item, guint timestamp, const gchar *command)
+{
+  GError *error = NULL;
+
+  if(!g_spawn_command_line_async(command, &error)) {
+    g_warning("Unable to start command %s: %s\n", command, error->message);
+    g_error_free(error);
+  }
+}
+
 static void
 build_menus(DbusmenuMenuitem *root)
 {
   g_debug("Building Menus.");
   if (item_1 == NULL) {
     item_1 = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(item_1, DBUSMENU_MENUITEM_PROP_LABEL, _("Test Item 1"));
+    dbusmenu_menuitem_property_set(item_1, DBUSMENU_MENUITEM_PROP_LABEL, _("Launch Gedit"));
     dbusmenu_menuitem_child_append(root, item_1);
+
+    g_signal_connect(G_OBJECT(item_1), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb),
+        "gedit");
   }
   if (item_2 == NULL) {
     item_2 = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(item_2, DBUSMENU_MENUITEM_PROP_LABEL, _("Test Item 2"));
+    dbusmenu_menuitem_property_set(item_2, DBUSMENU_MENUITEM_PROP_LABEL, _("Launch Xterm"));
     dbusmenu_menuitem_child_append(root, item_2);
+
+    g_signal_connect(G_OBJECT(item_2), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb),
+        "xterm");
   }
 
   return;
