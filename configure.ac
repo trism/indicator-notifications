@@ -1,10 +1,10 @@
 
-AC_INIT(indicator-example, 0.1.0, jason.conti@gmail.com)
+AC_INIT(indicator-notifications, 0.1.0, jason.conti@gmail.com)
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-example, 0.1.0)
+AM_INIT_AUTOMAKE(indicator-notifications, 0.1.0)
 
 AM_MAINTAINER_MODE
 
@@ -171,7 +171,7 @@ AC_DEFUN([AC_DEFINE_PATH], [
 # Internationalization
 ###########################
 
-GETTEXT_PACKAGE=indicator-example
+GETTEXT_PACKAGE=indicator-notifications
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Name of the default get text domain])
 AC_DEFINE_PATH(GNOMELOCALEDIR, "${datadir}/locale", [locale directory])

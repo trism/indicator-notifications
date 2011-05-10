@@ -1,4 +1,4 @@
 #!/bin/bash
 
-killall indicator-example-service
+killall indicator-notifications-service
 killall gnome-panel

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKG_NAME="indicator-example"
+PKG_NAME="indicator-notifications"
 
 which gnome-autogen.sh || {
 	echo "You need gnome-common from GNOME Git"
