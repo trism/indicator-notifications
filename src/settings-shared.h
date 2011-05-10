@@ -20,6 +20,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __NOTIFICATIONS_SETTINGS_SHARED_H__
 #define __NOTIFICATIONS_SETTINGS_SHARED_H__
 
-#define SETTINGS_INTERFACE "com.launchpad.recent-notifications.indicator"
+#define SETTINGS_INTERFACE "com.launchpad.RecentNotifications.indicator"
 
 #endif

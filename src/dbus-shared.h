@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define SERVICE_NAME    "com.launchpad.recent-notifications.indicator"
-#define SERVICE_IFACE   "com.launchpad.recent-notifications.indicator.service"
-#define SERVICE_OBJ     "/com/launchpad/recent-notifications/indicator/service"
+#define SERVICE_NAME    "com.launchpad.RecentNotifications.indicator"
+#define SERVICE_IFACE   "com.launchpad.RecentNotifications.indicator.service"
+#define SERVICE_OBJ     "/com/launchpad/RecentNotifications/indicator/service"
 #define SERVICE_VERSION 1
 
-#define MENU_OBJ        "/com/launchpad/recent-notifications/indicator/menu"
+#define MENU_OBJ        "/com/launchpad/RecentNotifications/indicator/menu"
