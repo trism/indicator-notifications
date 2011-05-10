@@ -33,7 +33,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
 
-#include "example-interface.h"
 #include "dbus-shared.h"
 #include "settings-shared.h"
 
@@ -41,7 +40,6 @@ static IndicatorService *service = NULL;
 static GMainLoop *mainloop = NULL;
 static DbusmenuServer *server = NULL;
 static DbusmenuMenuitem *root = NULL;
-static ExampleInterface *dbus = NULL;
 
 /* Global Items */
 static DbusmenuMenuitem *item_1 = NULL;
@@ -115,9 +113,6 @@ main(int argc, char **argv)
   dbusmenu_server_set_root(server, root);
 
   build_menus(root);
-
-  /* Setup dbus interface */
-  dbus = g_object_new(EXAMPLE_INTERFACE_TYPE, NULL);
 
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
