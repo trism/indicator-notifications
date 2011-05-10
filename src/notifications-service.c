@@ -115,7 +115,6 @@ main(int argc, char **argv)
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
 
-  g_object_unref(G_OBJECT(dbus));
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));
   g_object_unref(G_OBJECT(root));

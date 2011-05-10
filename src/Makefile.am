@@ -1,30 +1,30 @@
 
-libexec_PROGRAMS = indicator-example-service
+libexec_PROGRAMS = indicator-notifications-service
 
-indicator_example_service_SOURCES = \
-	example-service.c \
+indicator_notifications_service_SOURCES = \
+	notifications-service.c \
 	dbus-shared.h \
 	settings-shared.h
-indicator_example_service_CFLAGS = \
+indicator_notifications_service_CFLAGS = \
 	-Wall \
 	$(SERVICE_CFLAGS) \
-	-DG_LOG_DOMAIN=\"Indicator-Example\"
-indicator_example_service_LDADD = \
+	-DG_LOG_DOMAIN=\"Indicator-Notifications\"
+indicator_notifications_service_LDADD = \
 	$(SERVICE_LIBS)
 
-examplelibdir = $(INDICATORDIR)
-examplelib_LTLIBRARIES = libexample.la
-libexample_la_SOURCES = \
+notificationslibdir = $(INDICATORDIR)
+notificationslib_LTLIBRARIES = libnotifications.la
+libnotifications_la_SOURCES = \
 	dbus-shared.h \
 	settings-shared.h \
-	indicator-example.c
-libexample_la_CFLAGS = \
+	indicator-notifications.c
+libnotifications_la_CFLAGS = \
 	$(INDICATOR_CFLAGS) \
 	-Wall \
-	-DG_LOG_DOMAIN=\"Indicator-Example\"
-libexample_la_LIBADD = \
+	-DG_LOG_DOMAIN=\"Indicator-Notifications\"
+libnotifications_la_LIBADD = \
 	$(INDICATOR_LIBS)
-libexample_la_LDFLAGS = \
+libnotifications_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
