@@ -196,7 +196,7 @@ po/Makefile.in
 
 AC_MSG_NOTICE([
 
-Example Indicator Configuration:
+Recent Notifications Indicator Configuration:
 
 	Prefix:        $prefix
 	Indicator Dir: $INDICATORDIR
