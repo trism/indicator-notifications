@@ -39,3 +39,7 @@ autom4te.cache
 compile
 config.guess
 tags
+data/indicator-notifications.service
+src/indicator-notifications-service
+src/libnotifications.la
+src/libnotifications_la-indicator-notifications.lo

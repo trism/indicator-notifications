@@ -120,7 +120,7 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 static void
 menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
 {
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+  /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);*/
   g_debug("notify visible signal received");
 
   gboolean visible;
