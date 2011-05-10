@@ -46,75 +46,67 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dbus-shared.h"
 #include "settings-shared.h"
 
-#define INDICATOR_EXAMPLE_TYPE            (indicator_example_get_type ())
-#define INDICATOR_EXAMPLE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_EXAMPLE_TYPE, IndicatorExample))
-#define INDICATOR_EXAMPLE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), INDICATOR_EXAMPLE_TYPE, IndicatorExampleClass))
-#define IS_INDICATOR_EXAMPLE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), INDICATOR_EXAMPLE_TYPE))
-#define IS_INDICATOR_EXAMPLE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), INDICATOR_EXAMPLE_TYPE))
-#define INDICATOR_EXAMPLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), INDICATOR_EXAMPLE_TYPE, IndicatorExampleClass))
+#define INDICATOR_NOTIFICATIONS_TYPE            (indicator_notifications_get_type ())
+#define INDICATOR_NOTIFICATIONS(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotifications))
+#define INDICATOR_NOTIFICATIONS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsClass))
+#define IS_INDICATOR_NOTIFICATIONS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), INDICATOR_NOTIFICATIONS_TYPE))
+#define IS_INDICATOR_NOTIFICATIONS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), INDICATOR_NOTIFICATIONS_TYPE))
+#define INDICATOR_NOTIFICATIONS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsClass))
 
-typedef struct _IndicatorExample         IndicatorExample;
-typedef struct _IndicatorExampleClass    IndicatorExampleClass;
-typedef struct _IndicatorExamplePrivate  IndicatorExamplePrivate;
+typedef struct _IndicatorNotifications         IndicatorNotifications;
+typedef struct _IndicatorNotificationsClass    IndicatorNotificationsClass;
+typedef struct _IndicatorNotificationsPrivate  IndicatorNotificationsPrivate;
 
-struct _IndicatorExampleClass {
+struct _IndicatorNotificationsClass {
   IndicatorObjectClass parent_class;
 };
 
-struct _IndicatorExample {
+struct _IndicatorNotifications {
   IndicatorObject parent;
-  IndicatorExamplePrivate *priv;
+  IndicatorNotificationsPrivate *priv;
 };
 
-struct _IndicatorExamplePrivate {
+struct _IndicatorNotificationsPrivate {
   GtkLabel *label;
 
   IndicatorServiceManager *sm;
   DbusmenuGtkMenu *menu;
 
-  gint current_state;
-
   GCancellable *service_proxy_cancel;
   GDBusProxy *service_proxy;
 };
 
-enum {
-  STATE_NORMAL,
-  STATE_SHOWN,
-  STATE_HIDDEN
-};
+#define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
+(G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
 
-#define INDICATOR_EXAMPLE_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_EXAMPLE_TYPE, IndicatorExamplePrivate))
+GType indicator_notifications_get_type(void);
 
-GType indicator_example_get_type(void);
-
-static void indicator_example_class_init(IndicatorExampleClass *klass);
-static void indicator_example_init(IndicatorExample *self);
-static void indicator_example_dispose(GObject *object);
-static void indicator_example_finalize(GObject *object);
+static void indicator_notifications_class_init(IndicatorNotificationsClass *klass);
+static void indicator_notifications_init(IndicatorNotifications *self);
+static void indicator_notifications_dispose(GObject *object);
+static void indicator_notifications_finalize(GObject *object);
 static GtkLabel *get_label(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
-static void update_label(IndicatorExample *io);
+static void update_label(IndicatorNotifications *io);
 static void receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name, GVariant *parameters, gpointer user_data);
 static void service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data);
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
-INDICATOR_SET_TYPE(INDICATOR_EXAMPLE_TYPE)
+INDICATOR_SET_TYPE(INDICATOR_NOTIFICATIONS_TYPE)
 
-G_DEFINE_TYPE (IndicatorExample, indicator_example, INDICATOR_OBJECT_TYPE);
+G_DEFINE_TYPE (IndicatorNotifications, indicator_notifications, INDICATOR_OBJECT_TYPE);
 
 static void
-indicator_example_class_init(IndicatorExampleClass *klass)
+indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private(klass, sizeof(IndicatorExamplePrivate));
+  g_type_class_add_private(klass, sizeof(IndicatorNotificationsPrivate));
 
-  object_class->dispose = indicator_example_dispose;
-  object_class->finalize = indicator_example_finalize;
+  object_class->dispose = indicator_notifications_dispose;
+  object_class->finalize = indicator_notifications_finalize;
 
   IndicatorObjectClass *io_class = INDICATOR_OBJECT_CLASS(klass);
 
@@ -128,32 +120,25 @@ indicator_example_class_init(IndicatorExampleClass *klass)
 static void
 menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(user_data);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
   g_debug("notify visible signal received");
 
-  // we should only react if we're currently visible
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
-  /*
   if(visible) {
-    self->priv->current_state = STATE_SHOWN;
+    g_debug("notify visible menu shown");
   }
   else {
     g_debug("notify visible menu hidden");
-    self->priv->current_state = STATE_HIDDEN;
   }
-  */
-  update_label(self);
 }
 
 static void
-indicator_example_init(IndicatorExample *self)
+indicator_notifications_init(IndicatorNotifications *self)
 {
-  self->priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
+  self->priv = INDICATOR_NOTIFICATIONS_GET_PRIVATE(self);
 
   self->priv->label = NULL;
-
-  self->priv->current_state = STATE_NORMAL;
 
   self->priv->service_proxy = NULL;
 
@@ -191,12 +176,12 @@ service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
   GError *error = NULL;
 
-  IndicatorExample *self = INDICATOR_EXAMPLE(user_data);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
   g_return_if_fail(self != NULL);
 
   GDBusProxy *proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
 
-  IndicatorExamplePrivate *priv = INDICATOR_EXAMPLE_GET_PRIVATE(self);
+  IndicatorNotificationsPrivate *priv = INDICATOR_NOTIFICATIONS_GET_PRIVATE(self);
 
   if(priv->service_proxy_cancel != NULL) {
     g_object_unref(priv->service_proxy_cancel);
@@ -219,9 +204,9 @@ service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 }
 
 static void
-indicator_example_dispose(GObject *object)
+indicator_notifications_dispose(GObject *object)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(object);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(object);
 
   if(self->priv->label != NULL) {
     g_object_unref(self->priv->label);
@@ -243,22 +228,22 @@ indicator_example_dispose(GObject *object)
     self->priv->service_proxy = NULL;
   }
 
-  G_OBJECT_CLASS (indicator_example_parent_class)->dispose (object);
+  G_OBJECT_CLASS (indicator_notifications_parent_class)->dispose (object);
   return;
 }
 
 static void
-indicator_example_finalize(GObject *object)
+indicator_notifications_finalize(GObject *object)
 {
-  /*IndicatorExample *self = INDICATOR_EXAMPLE(object);*/
+  /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(object);*/
 
-  G_OBJECT_CLASS (indicator_example_parent_class)->finalize (object);
+  G_OBJECT_CLASS (indicator_notifications_parent_class)->finalize (object);
   return;
 }
 
 /* Updates the accessible description */
 static void
-update_accessible_description(IndicatorExample *io)
+update_accessible_description(IndicatorNotifications *io)
 {
   GList *entries = indicator_object_get_entries(INDICATOR_OBJECT(io));
   IndicatorObjectEntry *entry = (IndicatorObjectEntry *)entries->data;
@@ -278,22 +263,13 @@ update_accessible_description(IndicatorExample *io)
 
 /* Updates the label */
 static void
-update_label(IndicatorExample *io)
+update_label(IndicatorNotifications *io)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(io);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
 
   if(self->priv->label == NULL) return;
 
-  switch(self->priv->current_state) {
-    case STATE_HIDDEN:
-      gtk_label_set_text(self->priv->label, "Hidden");
-      break;
-    case STATE_SHOWN:
-      gtk_label_set_text(self->priv->label, "Shown");
-      break;
-    default:
-      gtk_label_set_text(self->priv->label, "Example");
-  }
+  gtk_label_set_text(self->priv->label, "Test");
 
   update_accessible_description(io);
 
@@ -305,7 +281,7 @@ static void
 receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
                GVariant *parameters, gpointer user_data)
 {
-  /*IndicatorExample *self = INDICATOR_EXAMPLE(user_data);*/
+  /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);*/
 
   return;
 }
@@ -316,7 +292,7 @@ static void
 style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer data)
 {
   g_debug("New style for label");
-  IndicatorExample *self = INDICATOR_EXAMPLE(data);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(data);
   update_label(self);
   return;
 }
@@ -325,7 +301,7 @@ style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer data)
 static void
 update_text_gravity(GtkWidget *widget, GdkScreen *previous_screen, gpointer data)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(data);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(data);
   if(self->priv->label == NULL) return;
 
   PangoLayout *layout;
@@ -341,11 +317,11 @@ update_text_gravity(GtkWidget *widget, GdkScreen *previous_screen, gpointer data
 static GtkLabel *
 get_label(IndicatorObject *io)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(io);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
 
   /* If there's not a label, we'll build ourselves one */
   if(self->priv->label == NULL) {
-    self->priv->label = GTK_LABEL(gtk_label_new("Example Init"));
+    self->priv->label = GTK_LABEL(gtk_label_new("Test Init"));
     gtk_label_set_justify(GTK_LABEL(self->priv->label), GTK_JUSTIFY_CENTER);
     g_object_ref(G_OBJECT(self->priv->label));
     g_signal_connect(G_OBJECT(self->priv->label), "style-set", G_CALLBACK(style_changed), self);
@@ -360,7 +336,7 @@ get_label(IndicatorObject *io)
 static GtkMenu *
 get_menu(IndicatorObject *io)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(io);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
 
   return GTK_MENU(self->priv->menu);
 }
@@ -368,7 +344,7 @@ get_menu(IndicatorObject *io)
 static const gchar *
 get_accessible_desc(IndicatorObject *io)
 {
-  IndicatorExample *self = INDICATOR_EXAMPLE(io);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
   const gchar *name;
 
   if(self->priv->label != NULL) {
