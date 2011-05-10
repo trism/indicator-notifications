@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.launchpad.recent-notifications.indicator
+Exec=@libexecdir@/indicator-notifications-service

@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.example.indicator.example
-Exec=@libexecdir@/indicator-example-service
