@@ -1,9 +1,7 @@
 /*
-An example indicator.
+An indicator to display recent notifications.
 
-Copyright 2010 Canonical Ltd.
-
-Authors:
+Adapted from: indicator-datetime/src/settings-shared.c by
     Ted Gould <ted@canonical.com>
 
 This program is free software: you can redistribute it and/or modify it 
