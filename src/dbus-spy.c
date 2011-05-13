@@ -36,7 +36,7 @@ dbus_spy_class_init(DBusSpyClass *klass)
   object_class->dispose = dbus_spy_dispose;
 
   signals[MESSAGE_RECEIVED] =
-    g_signal_new("message-received",
+    g_signal_new(DBUS_SPY_SIGNAL_MESSAGE_RECEIVED,
                  G_TYPE_FROM_CLASS(klass),
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(DBusSpyClass, message_received),

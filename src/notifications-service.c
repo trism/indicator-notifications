@@ -32,12 +32,14 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "dbus-shared.h"
+#include "dbus-spy.h"
 #include "settings-shared.h"
 
 static IndicatorService *service = NULL;
 static GMainLoop *mainloop = NULL;
 static DbusmenuServer *server = NULL;
 static DbusmenuMenuitem *root = NULL;
+static DBusSpy *spy = NULL;
 
 /* Global Items */
 static DbusmenuMenuitem *item_1 = NULL;
@@ -79,6 +81,16 @@ build_menus(DbusmenuMenuitem *root)
   return;
 }
 
+static void
+message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
+{
+  DbusmenuMenuitem *item;
+
+  item = dbusmenu_menuitem_new();
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
+  dbusmenu_menuitem_child_append(root, item);
+}
+
 /* Responds to the service object saying it's time to shutdown.
    It stops the mainloop. */
 static void 
@@ -112,9 +124,14 @@ main(int argc, char **argv)
 
   build_menus(root);
 
+  /* Set up the notification spy */
+  spy = dbus_spy_new();
+  g_signal_connect(spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), NULL);
+
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
 
+  g_object_unref(G_OBJECT(spy));
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));
   g_object_unref(G_OBJECT(root));

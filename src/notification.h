@@ -33,16 +33,16 @@ struct _NotificationClass
 };
 
 struct _NotificationPrivate {
-  gchar     *app_name;
-  gsize      app_name_length;
-  guint32    replaces_id;
-  gchar     *app_icon;
-  gsize      app_icon_length;
-  gchar     *summary;
-  gsize      summary_length;
-  gchar     *body;
-  gsize      body_length;
-  gint       expire_timeout;
+  gchar   *app_name;
+  gsize    app_name_length;
+  guint32  replaces_id;
+  gchar   *app_icon;
+  gsize    app_icon_length;
+  gchar   *summary;
+  gsize    summary_length;
+  gchar   *body;
+  gsize    body_length;
+  gint     expire_timeout;
 };
 
 #define NOTIFICATION_GET_PRIVATE(o) \
@@ -51,10 +51,10 @@ struct _NotificationPrivate {
 GType         notification_get_type(void);
 Notification *notification_new(void);
 Notification *notification_new_from_dbus_message(GDBusMessage *);
-gchar        *notification_get_app_name(Notification *);
-gchar        *notification_get_app_icon(Notification *);
-gchar        *notification_get_summary(Notification *);
-gchar        *notification_get_body(Notification *);
+const gchar  *notification_get_app_name(Notification *);
+const gchar  *notification_get_app_icon(Notification *);
+const gchar  *notification_get_summary(Notification *);
+const gchar  *notification_get_body(Notification *);
 void          notification_print(Notification *);
 
 G_END_DECLS

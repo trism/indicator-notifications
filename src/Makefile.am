@@ -2,6 +2,10 @@
 libexec_PROGRAMS = indicator-notifications-service
 
 indicator_notifications_service_SOURCES = \
+	dbus-spy.c \
+	dbus-spy.h \
+	notification.c \
+	notification.h \
 	notifications-service.c \
 	dbus-shared.h \
 	settings-shared.h

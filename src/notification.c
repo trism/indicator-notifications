@@ -122,6 +122,30 @@ notification_new_from_dbus_message(GDBusMessage *message)
   return self;
 }
 
+const gchar*
+notification_get_app_name(Notification *self)
+{
+  return self->priv->app_name;
+}
+
+const gchar*
+notification_get_app_icon(Notification *self)
+{
+  return self->priv->app_icon;
+}
+
+const gchar*
+notification_get_summary(Notification *self)
+{
+  return self->priv->summary;
+}
+
+const gchar*
+notification_get_body(Notification *self)
+{
+  return self->priv->body;
+}
+
 void
 notification_print(Notification *self)
 {
