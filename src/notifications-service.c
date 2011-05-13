@@ -61,10 +61,14 @@ static void
 add_message_item(Notification *note)
 {
   DbusmenuMenuitem *item;
+  GList *test;
 
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
   dbusmenu_menuitem_child_add_position(root, item, 1);
+
+  test = dbusmenu_menuitem_get_children(root);
+  g_debug("Children: %d", g_list_length(test));
 }
 
 static void
@@ -150,7 +154,7 @@ log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpo
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
-  g_debug("Message received from %s", notification_get_app_name(note));
+  //g_debug("Message received from %s", notification_get_app_name(note));
   add_message_item(note);
 }
 
