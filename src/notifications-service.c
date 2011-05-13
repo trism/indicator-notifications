@@ -42,59 +42,130 @@ static DbusmenuMenuitem *root = NULL;
 static DBusSpy *spy = NULL;
 
 /* Global Items */
-static DbusmenuMenuitem *item_1 = NULL;
-static DbusmenuMenuitem *item_2 = NULL;
+static DbusmenuMenuitem *clear_item = NULL;
+static DbusmenuMenuitem *filter_item = NULL;
+static GQueue *message_items = NULL;
 
-/* Test the item activation signal */
+/* Logging */
+#define LOG_FILE_NAME "indicator-notifications-service.log"
+static GOutputStream *log_file = NULL;
+
+static void add_message_item(Notification *);
+static void build_menus(DbusmenuMenuitem *);
+static void clear_notifications_cb(DbusmenuMenuitem *, guint, gpointer);
+static void log_to_file_cb(GObject *, GAsyncResult *, gpointer);
+static void log_to_file(const gchar *, GLogLevelFlags, const gchar *, gpointer);
+static void message_received_cb(DBusSpy *, Notification *, gpointer);
+static void service_shutdown_cb(IndicatorService *, gpointer);
+
 static void
-activate_cb(DbusmenuMenuitem *item, guint timestamp, const gchar *command)
+add_message_item(Notification *note)
 {
-  GError *error = NULL;
+  DbusmenuMenuitem *item;
 
-  if(!g_spawn_command_line_async(command, &error)) {
-    g_warning("Unable to start command %s: %s\n", command, error->message);
-    g_error_free(error);
-  }
+  item = dbusmenu_menuitem_new();
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
+  dbusmenu_menuitem_child_add_position(root, item, 1);
+  //g_queue_push_head(message_items, item);
 }
 
 static void
 build_menus(DbusmenuMenuitem *root)
 {
   g_debug("Building Menus.");
-  if (item_1 == NULL) {
-    item_1 = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(item_1, DBUSMENU_MENUITEM_PROP_LABEL, _("Launch Gedit"));
-    dbusmenu_menuitem_child_append(root, item_1);
+  if(clear_item == NULL) {
+    clear_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(clear_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Clear Notifications"));
+    dbusmenu_menuitem_child_prepend(root, clear_item);
 
-    g_signal_connect(G_OBJECT(item_1), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb),
-        "gedit");
+    g_signal_connect(G_OBJECT(clear_item), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
+        G_CALLBACK(clear_notifications_cb), NULL);
   }
-  if (item_2 == NULL) {
-    item_2 = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(item_2, DBUSMENU_MENUITEM_PROP_LABEL, _("Launch Xterm"));
-    dbusmenu_menuitem_child_append(root, item_2);
-
-    g_signal_connect(G_OBJECT(item_2), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK(activate_cb),
-        "xterm");
+  if(filter_item == NULL) {
+    filter_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(filter_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Filter"));
+    dbusmenu_menuitem_child_prepend(root, filter_item);
   }
 
   return;
 }
 
 static void
+clear_notifications_cb(DbusmenuMenuitem *item, guint timestamp, gpointer user_data)
+{
+  DbusmenuMenuitem *old_item;
+
+  while(!g_queue_is_empty(message_items)) {
+    old_item = g_queue_pop_tail(message_items);
+    dbusmenu_menuitem_child_delete(root, old_item);
+    g_object_unref(old_item);
+  }
+}
+
+/* from indicator-applet */
+static void
+log_to_file_cb(GObject *source_obj, GAsyncResult *result, gpointer user_data)
+{
+  g_free(user_data);
+}
+
+/* from indicator-applet */
+static void
+log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpointer user_data)
+{
+  /* Create the log file */
+  if(log_file == NULL) {
+    GError *error = NULL;
+    gchar *filename = g_build_filename(g_get_user_cache_dir(), LOG_FILE_NAME, NULL);
+    GFile *file = g_file_new_for_path(filename);
+    g_free(filename);
+
+    /* Create the ~/.cache directory if it doesn't exist */
+    if(!g_file_test(g_get_user_cache_dir(), G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+      GFile *cache_dir = g_file_new_for_path(g_get_user_cache_dir());
+      g_file_make_directory_with_parents(cache_dir, NULL, &error);
+
+      if(error != NULL) {
+        g_error("Unable to make directory '%s' for log file: %s", g_get_user_cache_dir(), error->message);
+        return;
+      }
+    }
+
+    g_file_delete(file, NULL, NULL);
+
+    GFileIOStream *io = g_file_create_readwrite(file,
+        G_FILE_CREATE_REPLACE_DESTINATION,
+        NULL,
+        &error);
+
+    if(error != NULL) {
+      g_error("Unable to replace file: %s", error->message);
+      return;
+    }
+
+    log_file = g_io_stream_get_output_stream(G_IO_STREAM(io));
+  }
+
+  gchar *output_string = g_strdup_printf("%s\n", message);
+  g_output_stream_write_async(log_file,
+      output_string,
+      strlen(output_string),
+      G_PRIORITY_LOW,
+      NULL,
+      log_to_file_cb,
+      output_string);
+}
+
+static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
-  DbusmenuMenuitem *item;
-
-  item = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
-  dbusmenu_menuitem_child_append(root, item);
+  add_message_item(note);
 }
 
 /* Responds to the service object saying it's time to shutdown.
    It stops the mainloop. */
 static void 
-service_shutdown(IndicatorService *service, gpointer user_data)
+service_shutdown_cb(IndicatorService *service, gpointer user_data)
 {
   g_warning("Shutting down service!");
   g_main_loop_quit(mainloop);
@@ -107,9 +178,12 @@ main(int argc, char **argv)
 {
   g_type_init();
 
+  /* Logging */
+  g_log_set_default_handler(log_to_file, NULL);
+
   /* Acknowledging the service init and setting up the interface */
   service = indicator_service_new_version(SERVICE_NAME, SERVICE_VERSION);
-  g_signal_connect(service, INDICATOR_SERVICE_SIGNAL_SHUTDOWN, G_CALLBACK(service_shutdown), NULL);
+  g_signal_connect(service, INDICATOR_SERVICE_SIGNAL_SHUTDOWN, G_CALLBACK(service_shutdown_cb), NULL);
 
   /* Setting up i18n and gettext.  Apparently, we need
   all of these. */
@@ -124,6 +198,9 @@ main(int argc, char **argv)
 
   build_menus(root);
 
+  /* Create the message queue */
+  message_items = g_queue_new();
+
   /* Set up the notification spy */
   spy = dbus_spy_new();
   g_signal_connect(spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), NULL);
@@ -131,6 +208,7 @@ main(int argc, char **argv)
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
 
+  g_queue_free(message_items);
   g_object_unref(G_OBJECT(spy));
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));
