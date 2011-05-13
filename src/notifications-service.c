@@ -49,7 +49,7 @@ static DbusmenuMenuitem *filter_item = NULL;
 #define LOG_FILE_NAME "indicator-notifications-service.log"
 static GOutputStream *log_file = NULL;
 
-static void add_message_item(Notification *);
+static gboolean add_message_item(gpointer);
 static void build_menus(DbusmenuMenuitem *);
 static void clear_notifications_cb(DbusmenuMenuitem *, guint, gpointer);
 static void log_to_file_cb(GObject *, GAsyncResult *, gpointer);
@@ -57,9 +57,10 @@ static void log_to_file(const gchar *, GLogLevelFlags, const gchar *, gpointer);
 static void message_received_cb(DBusSpy *, Notification *, gpointer);
 static void service_shutdown_cb(IndicatorService *, gpointer);
 
-static void
-add_message_item(Notification *note)
+static gboolean
+add_message_item(gpointer user_data)
 {
+  Notification *note = NOTIFICATION(user_data);
   DbusmenuMenuitem *item;
   GList *test;
 
@@ -69,6 +70,10 @@ add_message_item(Notification *note)
 
   test = dbusmenu_menuitem_get_children(root);
   g_debug("Children: %d", g_list_length(test));
+
+  g_object_unref(note);
+
+  return FALSE;
 }
 
 static void
@@ -155,7 +160,8 @@ static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
   //g_debug("Message received from %s", notification_get_app_name(note));
-  add_message_item(note);
+  g_object_ref(note);
+  g_idle_add(add_message_item, note);
 }
 
 /* Responds to the service object saying it's time to shutdown.
