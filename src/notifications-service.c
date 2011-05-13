@@ -44,7 +44,6 @@ static DBusSpy *spy = NULL;
 /* Global Items */
 static DbusmenuMenuitem *clear_item = NULL;
 static DbusmenuMenuitem *filter_item = NULL;
-static GQueue *message_items = NULL;
 
 /* Logging */
 #define LOG_FILE_NAME "indicator-notifications-service.log"
@@ -66,7 +65,6 @@ add_message_item(Notification *note)
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
   dbusmenu_menuitem_child_add_position(root, item, 1);
-  //g_queue_push_head(message_items, item);
 }
 
 static void
@@ -93,13 +91,6 @@ build_menus(DbusmenuMenuitem *root)
 static void
 clear_notifications_cb(DbusmenuMenuitem *item, guint timestamp, gpointer user_data)
 {
-  DbusmenuMenuitem *old_item;
-
-  while(!g_queue_is_empty(message_items)) {
-    old_item = g_queue_pop_tail(message_items);
-    dbusmenu_menuitem_child_delete(root, old_item);
-    g_object_unref(old_item);
-  }
 }
 
 /* from indicator-applet */
@@ -159,6 +150,7 @@ log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpo
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
+  g_debug("Message received from %s", notification_get_app_name(note));
   add_message_item(note);
 }
 
@@ -198,9 +190,6 @@ main(int argc, char **argv)
 
   build_menus(root);
 
-  /* Create the message queue */
-  message_items = g_queue_new();
-
   /* Set up the notification spy */
   spy = dbus_spy_new();
   g_signal_connect(spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), NULL);
@@ -208,7 +197,6 @@ main(int argc, char **argv)
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
 
-  g_queue_free(message_items);
   g_object_unref(G_OBJECT(spy));
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));
