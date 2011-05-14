@@ -44,12 +44,14 @@ static DBusSpy *spy = NULL;
 /* Global Items */
 static DbusmenuMenuitem *clear_item = NULL;
 static DbusmenuMenuitem *filter_item = NULL;
+static GQueue *notification_items = NULL;
+static guint notification_limit = 5;
 
 /* Logging */
 #define LOG_FILE_NAME "indicator-notifications-service.log"
 static GOutputStream *log_file = NULL;
 
-static gboolean add_message_item(gpointer);
+static gboolean add_notification_item(gpointer);
 static void build_menus(DbusmenuMenuitem *);
 static void clear_notifications_cb(DbusmenuMenuitem *, guint, gpointer);
 static void log_to_file_cb(GObject *, GAsyncResult *, gpointer);
@@ -58,18 +60,27 @@ static void message_received_cb(DBusSpy *, Notification *, gpointer);
 static void service_shutdown_cb(IndicatorService *, gpointer);
 
 static gboolean
-add_message_item(gpointer user_data)
+add_notification_item(gpointer user_data)
 {
   Notification *note = NOTIFICATION(user_data);
   DbusmenuMenuitem *item;
-  GList *test;
 
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
   dbusmenu_menuitem_child_add_position(root, item, 1);
+  g_queue_push_head(notification_items, item);
 
-  test = dbusmenu_menuitem_get_children(root);
-  g_debug("Children: %d", g_list_length(test));
+  guint length = g_queue_get_length(notification_items);
+
+  g_debug("Adding message from %s (Queue length: %d)", notification_get_app_name(note),
+      length);
+
+  if(length > notification_limit) {
+    item = DBUSMENU_MENUITEM(g_queue_pop_tail(notification_items));
+    dbusmenu_menuitem_child_delete(root, item);
+    g_object_unref(item);
+    item = NULL;
+  }
 
   g_object_unref(note);
 
@@ -159,9 +170,8 @@ log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpo
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
-  //g_debug("Message received from %s", notification_get_app_name(note));
   g_object_ref(note);
-  g_idle_add(add_message_item, note);
+  g_idle_add(add_notification_item, note);
 }
 
 /* Responds to the service object saying it's time to shutdown.
@@ -199,6 +209,9 @@ main(int argc, char **argv)
   dbusmenu_server_set_root(server, root);
 
   build_menus(root);
+
+  /* Create the notification queue */
+  notification_items = g_queue_new();
 
   /* Set up the notification spy */
   spy = dbus_spy_new();
