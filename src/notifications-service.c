@@ -52,6 +52,7 @@ static guint notification_limit = 5;
 static GOutputStream *log_file = NULL;
 
 static gboolean add_notification_item(gpointer);
+static gboolean clear_notification_items(gpointer);
 static void build_menus(DbusmenuMenuitem *);
 static void clear_notifications_cb(DbusmenuMenuitem *, guint, gpointer);
 static void log_to_file_cb(GObject *, GAsyncResult *, gpointer);
@@ -87,6 +88,22 @@ add_notification_item(gpointer user_data)
   return FALSE;
 }
 
+static gboolean
+clear_notification_items(gpointer user_data)
+{
+  DbusmenuMenuitem *item;
+
+  while(!g_queue_is_empty(notification_items)) {
+    item = DBUSMENU_MENUITEM(g_queue_pop_tail(notification_items));
+    dbusmenu_menuitem_child_delete(root, item);
+    g_object_unref(item);
+  }
+
+  item = NULL;
+
+  return FALSE;
+}
+
 static void
 build_menus(DbusmenuMenuitem *root)
 {
@@ -111,6 +128,7 @@ build_menus(DbusmenuMenuitem *root)
 static void
 clear_notifications_cb(DbusmenuMenuitem *item, guint timestamp, gpointer user_data)
 {
+  g_idle_add(clear_notification_items, NULL);
 }
 
 /* from indicator-applet */
