@@ -57,6 +57,7 @@ GIO_REQUIRED_VERSION=2.25.11
 # Note: the GIO check below also ensures the proper glib with gsettings support is present
 INDICATOR_DISPLAY_OBJECTS=0.2.2
 GDK_REQUIRED_VERSION=2.22
+GDK_PIXBUF_REQUIRED_VERSION=2.22
 GLIB_REQUIRED_VERSION=2.26
 GTK_REQUIRED_VERSION=2.12
 GTK3_REQUIRED_VERSION=3.0
@@ -73,6 +74,7 @@ AS_IF([test "x$with_gtk" = x3],
                                   glib-2.0 >= $GLIB_REQUIRED_VERSION
                                   dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                   dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
+                                  gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION
                                   libido-0.1 >= $INDICATOR_DISPLAY_OBJECTS)
         ],
     [AC_MSG_FAILURE([Value for --with-gtk was neither 2 nor 3])]
@@ -89,11 +91,12 @@ AS_IF([test "x$with_gtk" = x3],
 		],
       [test "x$with_gtk" = x2],
 	[PKG_CHECK_MODULES(SERVICE,  indicator >= $INDICATOR_REQUIRED_VERSION
-                                 glib-2.0 >= $GLIB_REQUIRED_VERSION
+                                     glib-2.0 >= $GLIB_REQUIRED_VERSION
 	                             dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                 dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
+                                     dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
 	                             libido-0.1 >= $INDICATOR_DISPLAY_OBJECTS
 	                             gio-2.0 >= $GIO_REQUIRED_VERSION
+                                     gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION
 	                             gdk-2.0 >= GDK_REQUIRED_VERSION)
         ],
     [AC_MSG_FAILURE([Value for --with-gtk was neither 2 nor 3])]
