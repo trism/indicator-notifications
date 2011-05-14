@@ -69,10 +69,11 @@ struct _IndicatorNotifications {
 
 struct _IndicatorNotificationsPrivate {
   GtkImage *image;
-  GtkLabel *label;
 
   IndicatorServiceManager *sm;
   DbusmenuGtkMenu *menu;
+
+  gchar *accessible_desc;
 
   GCancellable *service_proxy_cancel;
   GDBusProxy *service_proxy;
@@ -87,11 +88,9 @@ static void indicator_notifications_class_init(IndicatorNotificationsClass *klas
 static void indicator_notifications_init(IndicatorNotifications *self);
 static void indicator_notifications_dispose(GObject *object);
 static void indicator_notifications_finalize(GObject *object);
-static GtkLabel *get_label(IndicatorObject *io);
 static GtkImage *get_image(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
-static void update_label(IndicatorNotifications *io);
 static void receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name, GVariant *parameters, gpointer user_data);
 static void service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data);
 
@@ -114,7 +113,6 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
   IndicatorObjectClass *io_class = INDICATOR_OBJECT_CLASS(klass);
 
   io_class->get_image = get_image;
-  io_class->get_label = get_label;
   io_class->get_menu = get_menu;
   io_class->get_accessible_desc = get_accessible_desc;
 
@@ -142,12 +140,12 @@ indicator_notifications_init(IndicatorNotifications *self)
 {
   self->priv = INDICATOR_NOTIFICATIONS_GET_PRIVATE(self);
 
-  self->priv->label = NULL;
-
   self->priv->service_proxy = NULL;
 
   self->priv->sm = NULL;
   self->priv->menu = NULL;
+
+  self->priv->accessible_desc = _("Notifications");
 
   self->priv->sm = indicator_service_manager_new_version(SERVICE_NAME, SERVICE_VERSION);
 
@@ -212,9 +210,9 @@ indicator_notifications_dispose(GObject *object)
 {
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(object);
 
-  if(self->priv->label != NULL) {
-    g_object_unref(self->priv->label);
-    self->priv->label = NULL;
+  if(self->priv->image != NULL) {
+    g_object_unref(G_OBJECT(self->priv->image));
+    self->priv->image = NULL;
   }
 
   if(self->priv->menu != NULL) {
@@ -245,41 +243,6 @@ indicator_notifications_finalize(GObject *object)
   return;
 }
 
-/* Updates the accessible description */
-static void
-update_accessible_description(IndicatorNotifications *io)
-{
-  GList *entries = indicator_object_get_entries(INDICATOR_OBJECT(io));
-  IndicatorObjectEntry *entry = (IndicatorObjectEntry *)entries->data;
-
-  entry->accessible_desc = get_accessible_desc(INDICATOR_OBJECT(io));
-
-  g_signal_emit(G_OBJECT(io),
-                INDICATOR_OBJECT_SIGNAL_ACCESSIBLE_DESC_UPDATE_ID,
-                0,
-                entry,
-                TRUE);
-
-  g_list_free(entries);
-
-  return;
-}
-
-/* Updates the label */
-static void
-update_label(IndicatorNotifications *io)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-
-  if(self->priv->label == NULL) return;
-
-  gtk_label_set_text(self->priv->label, "Test");
-
-  update_accessible_description(io);
-
-  return;
-}
-
 /* Receives all signals from the service, routed to the appropriate functions */
 static void
 receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
@@ -288,32 +251,6 @@ receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
   /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);*/
 
   return;
-}
-
-/* React to the style changing, which could mean an font
-   update. */
-static void
-style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer data)
-{
-  g_debug("New style for label");
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(data);
-  update_label(self);
-  return;
-}
-
-/* Respond to changes in the screen to update the text gravity */
-static void
-update_text_gravity(GtkWidget *widget, GdkScreen *previous_screen, gpointer data)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(data);
-  if(self->priv->label == NULL) return;
-
-  PangoLayout *layout;
-  PangoContext *context;
-
-  layout = gtk_label_get_layout(GTK_LABEL(self->priv->label));
-  context = pango_layout_get_context(layout);
-  pango_context_set_base_gravity(context, PANGO_GRAVITY_AUTO);
 }
 
 static GtkImage *
@@ -342,27 +279,6 @@ get_image(IndicatorObject *io)
   return self->priv->image;
 }
 
-/* Grabs the label.  Creates it if it doesn't
-   exist already */
-static GtkLabel *
-get_label(IndicatorObject *io)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-
-  /* If there's not a label, we'll build ourselves one */
-  if(self->priv->label == NULL) {
-    self->priv->label = GTK_LABEL(gtk_label_new("Test Init"));
-    gtk_label_set_justify(GTK_LABEL(self->priv->label), GTK_JUSTIFY_CENTER);
-    g_object_ref(G_OBJECT(self->priv->label));
-    g_signal_connect(G_OBJECT(self->priv->label), "style-set", G_CALLBACK(style_changed), self);
-    g_signal_connect(G_OBJECT(self->priv->label), "screen-changed", G_CALLBACK(update_text_gravity), self);
-    update_label(self);
-    gtk_widget_set_visible(GTK_WIDGET(self->priv->label), TRUE);
-  }
-
-  return self->priv->label;
-}
-
 static GtkMenu *
 get_menu(IndicatorObject *io)
 {
@@ -375,11 +291,6 @@ static const gchar *
 get_accessible_desc(IndicatorObject *io)
 {
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-  const gchar *name;
 
-  if(self->priv->label != NULL) {
-    name = gtk_label_get_text(self->priv->label);
-    return name;
-  }
-  return NULL;
+  return self->priv->accessible_desc;
 }
