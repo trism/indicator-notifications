@@ -32,6 +32,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <glib-object.h>
 #include <glib/gi18n-lib.h>
 #include <gio/gio.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 /* Indicator Stuff */
 #include <libindicator/indicator.h>
@@ -67,6 +68,7 @@ struct _IndicatorNotifications {
 };
 
 struct _IndicatorNotificationsPrivate {
+  GtkImage *image;
   GtkLabel *label;
 
   IndicatorServiceManager *sm;
@@ -86,6 +88,7 @@ static void indicator_notifications_init(IndicatorNotifications *self);
 static void indicator_notifications_dispose(GObject *object);
 static void indicator_notifications_finalize(GObject *object);
 static GtkLabel *get_label(IndicatorObject *io);
+static GtkImage *get_image(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
 static void update_label(IndicatorNotifications *io);
@@ -110,6 +113,7 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 
   IndicatorObjectClass *io_class = INDICATOR_OBJECT_CLASS(klass);
 
+  io_class->get_image = get_image;
   io_class->get_label = get_label;
   io_class->get_menu = get_menu;
   io_class->get_accessible_desc = get_accessible_desc;
@@ -310,6 +314,32 @@ update_text_gravity(GtkWidget *widget, GdkScreen *previous_screen, gpointer data
   layout = gtk_label_get_layout(GTK_LABEL(self->priv->label));
   context = pango_layout_get_context(layout);
   pango_context_set_base_gravity(context, PANGO_GRAVITY_AUTO);
+}
+
+static GtkImage *
+get_image(IndicatorObject *io)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
+
+  if(self->priv->image == NULL) {
+    self->priv->image = GTK_IMAGE(gtk_image_new());
+
+    GError *error = NULL;
+
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale(ICONS_DIR "/notification-read.svg", 22, 22, FALSE, &error);
+
+    if(error != NULL) {
+      g_error("Failed to load icon: %s", error->message);
+      return NULL;
+    }
+
+    gtk_image_set_from_pixbuf(self->priv->image, pixbuf);
+    g_object_unref(pixbuf);
+
+    gtk_widget_show(GTK_WIDGET(self->priv->image));
+  }
+
+  return self->priv->image;
 }
 
 /* Grabs the label.  Creates it if it doesn't

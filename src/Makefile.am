@@ -1,3 +1,4 @@
+AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"'
 
 libexec_PROGRAMS = indicator-notifications-service
 
