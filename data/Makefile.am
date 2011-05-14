@@ -1,4 +1,4 @@
-#SUBDIRS = icons
+SUBDIRS = icons
 
 dbus_servicesdir = $(DBUSSERVICEDIR)
 dbus_services_DATA = indicator-notifications.service
