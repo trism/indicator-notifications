@@ -70,6 +70,9 @@ struct _IndicatorNotifications {
 struct _IndicatorNotificationsPrivate {
   GtkImage *image;
 
+  GdkPixbuf *pixbuf_read;
+  GdkPixbuf *pixbuf_unread;
+
   IndicatorServiceManager *sm;
   DbusmenuGtkMenu *menu;
 
@@ -82,6 +85,8 @@ struct _IndicatorNotificationsPrivate {
 #define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
 
+#define INDICATOR_ICON_SIZE 22
+
 GType indicator_notifications_get_type(void);
 
 static void indicator_notifications_class_init(IndicatorNotificationsClass *klass);
@@ -91,6 +96,7 @@ static void indicator_notifications_finalize(GObject *object);
 static GtkImage *get_image(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
+static GdkPixbuf *load_icon(const gchar *, guint);
 static void receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name, GVariant *parameters, gpointer user_data);
 static void service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data);
 
@@ -144,6 +150,10 @@ indicator_notifications_init(IndicatorNotifications *self)
 
   self->priv->sm = NULL;
   self->priv->menu = NULL;
+
+  self->priv->image = NULL;
+  self->priv->pixbuf_read = NULL;
+  self->priv->pixbuf_unread = NULL;
 
   self->priv->accessible_desc = _("Notifications");
 
@@ -215,6 +225,16 @@ indicator_notifications_dispose(GObject *object)
     self->priv->image = NULL;
   }
 
+  if(self->priv->pixbuf_read != NULL) {
+    g_object_unref(G_OBJECT(self->priv->pixbuf_read));
+    self->priv->pixbuf_read = NULL;
+  }
+
+  if(self->priv->pixbuf_unread != NULL) {
+    g_object_unref(G_OBJECT(self->priv->pixbuf_unread));
+    self->priv->pixbuf_unread = NULL;
+  }
+
   if(self->priv->menu != NULL) {
     g_object_unref(G_OBJECT(self->priv->menu));
     self->priv->menu = NULL;
@@ -253,6 +273,28 @@ receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
   return;
 }
 
+static GdkPixbuf *
+load_icon(const gchar *name, guint size)
+{
+  /* TODO:
+   * Try to load icon from icon theme before falling back to absolute paths
+   */
+
+  GError *error = NULL;
+
+  gchar *path = g_strdup_printf(ICONS_DIR "/%s.svg", name);
+  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale(path, size, size, FALSE, &error);
+
+  if(error != NULL) {
+    g_warning("Failed to load icon at '%s': %s", path, error->message);
+    pixbuf = NULL;
+  }
+
+  g_free(path);
+
+  return pixbuf;
+}
+
 static GtkImage *
 get_image(IndicatorObject *io)
 {
@@ -261,17 +303,21 @@ get_image(IndicatorObject *io)
   if(self->priv->image == NULL) {
     self->priv->image = GTK_IMAGE(gtk_image_new());
 
-    GError *error = NULL;
+    self->priv->pixbuf_read = load_icon("notification-read", INDICATOR_ICON_SIZE);
 
-    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale(ICONS_DIR "/notification-read.svg", 22, 22, FALSE, &error);
-
-    if(error != NULL) {
-      g_error("Failed to load icon: %s", error->message);
+    if(self->priv->pixbuf_read == NULL) {
+      g_error("Failed to load read icon");
       return NULL;
     }
 
-    gtk_image_set_from_pixbuf(self->priv->image, pixbuf);
-    g_object_unref(pixbuf);
+    self->priv->pixbuf_unread = load_icon("notification-unread", INDICATOR_ICON_SIZE);
+
+    if(self->priv->pixbuf_unread == NULL) {
+      g_error("Failed to load unread icon");
+      return NULL;
+    }
+
+    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
 
     gtk_widget_show(GTK_WIDGET(self->priv->image));
   }
