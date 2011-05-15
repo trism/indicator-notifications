@@ -178,6 +178,12 @@ notifications_interface_finalize(GObject *object)
   return;
 }
 
+NotificationsInterface *
+notifications_interface_new()
+{
+  return NOTIFICATIONS_INTERFACE(g_object_new(NOTIFICATIONS_INTERFACE_TYPE, NULL));
+}
+
 void
 notifications_interface_message_added(NotificationsInterface *self)
 {

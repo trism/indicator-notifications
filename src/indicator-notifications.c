@@ -129,17 +129,14 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 static void
 menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
 {
-  /* IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data); */
-
-  g_debug("notify visible signal received");
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
-  if(visible) {
-    g_debug("notify visible menu shown");
-  }
-  else {
-    g_debug("notify visible menu hidden");
+  if(!visible) {
+    if(self->priv->pixbuf_read != NULL) {
+      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
+    }
   }
 }
 
@@ -268,7 +265,14 @@ static void
 receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
                GVariant *parameters, gpointer user_data)
 {
-  /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);*/
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  g_debug("received signal '%s'", signal_name);
+  if(g_strcmp0(signal_name, "MessageAdded") == 0) {
+    if(self->priv->pixbuf_unread != NULL) {
+      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
+    }
+  }
 
   return;
 }

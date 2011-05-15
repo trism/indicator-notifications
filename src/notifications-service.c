@@ -33,6 +33,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dbus-shared.h"
 #include "dbus-spy.h"
+#include "notifications-interface.h"
 #include "settings-shared.h"
 
 static IndicatorService *service = NULL;
@@ -40,6 +41,7 @@ static GMainLoop *mainloop = NULL;
 static DbusmenuServer *server = NULL;
 static DbusmenuMenuitem *root = NULL;
 static DBusSpy *spy = NULL;
+static NotificationsInterface *dbus = NULL;
 
 /* Global Items */
 static DbusmenuMenuitem *clear_item = NULL;
@@ -82,6 +84,8 @@ add_notification_item(gpointer user_data)
     g_object_unref(item);
     item = NULL;
   }
+
+  notifications_interface_message_added(dbus);
 
   g_object_unref(note);
 
@@ -235,9 +239,13 @@ main(int argc, char **argv)
   spy = dbus_spy_new();
   g_signal_connect(spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), NULL);
 
+  /* Setup the dbus interface */
+  dbus = notifications_interface_new();
+
   mainloop = g_main_loop_new(NULL, FALSE);
   g_main_loop_run(mainloop);
 
+  g_object_unref(G_OBJECT(dbus));
   g_object_unref(G_OBJECT(spy));
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));

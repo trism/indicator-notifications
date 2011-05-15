@@ -47,8 +47,9 @@ struct _NotificationsInterface {
   NotificationsInterfacePrivate *priv;
 };
 
-GType notifications_interface_get_type(void);
-void  notifications_interface_message_added(NotificationsInterface *self);
+GType                   notifications_interface_get_type(void);
+NotificationsInterface *notifications_interface_new();
+void                    notifications_interface_message_added(NotificationsInterface *self);
 
 G_END_DECLS
 
