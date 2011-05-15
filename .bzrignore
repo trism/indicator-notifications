@@ -43,3 +43,5 @@ data/indicator-notifications.service
 src/indicator-notifications-service
 src/libnotifications.la
 src/libnotifications_la-indicator-notifications.lo
+src/gen-notifications-service.xml.c
+src/gen-notifications-service.xml.h

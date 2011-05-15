@@ -7,6 +7,9 @@ indicator_notifications_service_SOURCES = \
 	dbus-spy.h \
 	notification.c \
 	notification.h \
+	notifications-interface.c \
+	notifications-interface.h \
+	gen-notifications-service.xml.c \
 	notifications-service.c \
 	dbus-shared.h \
 	settings-shared.h
@@ -33,3 +36,22 @@ libnotifications_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
+gen-%.xml.c: %.xml
+	@echo "Building $@ from $<"
+	@echo "const char * _$(subst -,_,$(subst .,_,$(basename $<))) = " > $@
+	@sed -e "s:\":\\\\\":g" -e s:^:\": -e s:\$$:\\\\n\": $< >> $@
+	@echo ";" >> $@
+
+gen-%.xml.h: %.xml
+	@echo "Building $@ from $<"
+	@echo "extern const char * _$(subst -,_,$(subst .,_,$(basename $<)));" > $@
+
+BUILT_SOURCES = \
+	gen-notifications-service.xml.c \
+	gen-notifications-service.xml.h
+
+CLEANFILES = \
+	$(BUILT_SOURCES)
+
+EXTRA_DIST = \
+	notifications-service.xml
