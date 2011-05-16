@@ -165,7 +165,7 @@ indicator_notifications_init(IndicatorNotifications *self)
 
   DbusmenuGtkClient *client = dbusmenu_gtkmenu_get_client(self->priv->menu);
 
-  dbusmenu_client_add_type_handler_full(DBUSMENU_CLIENT(client), DBUSMENU_NOTIFICATION_MENUITEM_TYPE, new_notification_menuitem, self, NULL);
+  dbusmenu_client_add_type_handler_full(DBUSMENU_CLIENT(client), NOTIFICATION_MENUITEM_TYPE, new_notification_menuitem, self, NULL);
 
   self->priv->service_proxy_cancel = g_cancellable_new();
 
@@ -293,7 +293,7 @@ new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent,
 
   GtkWidget *item = gtk_menu_item_new();
   gtk_menu_item_set_label(GTK_MENU_ITEM(item), dbusmenu_menuitem_property_get(new_item,
-        DBUSMENU_MENUITEM_PROP_LABEL));
+        NOTIFICATION_MENUITEM_PROP_SUMMARY));
   gtk_widget_show(item);
 
   dbusmenu_gtkclient_newitem_base(DBUSMENU_GTKCLIENT(client), new_item, GTK_MENU_ITEM(item), parent);
