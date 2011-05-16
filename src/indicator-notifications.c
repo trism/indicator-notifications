@@ -287,6 +287,19 @@ new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent,
                           DbusmenuClient *client, gpointer user_data)
 {
   g_debug("New notification item");
+  g_return_val_if_fail(DBUSMENU_IS_MENUITEM(new_item), FALSE);
+  g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
+  g_return_val_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data), FALSE);
+
+  GtkWidget *item = gtk_menu_item_new();
+  gtk_menu_item_set_label(GTK_MENU_ITEM(item), dbusmenu_menuitem_property_get(new_item,
+        DBUSMENU_MENUITEM_PROP_LABEL));
+  gtk_widget_show(item);
+
+  dbusmenu_gtkclient_newitem_base(DBUSMENU_GTKCLIENT(client), new_item, GTK_MENU_ITEM(item), parent);
+
+  g_object_unref(item);
+
   return TRUE;
 }
 
