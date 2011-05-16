@@ -96,9 +96,9 @@ static void indicator_notifications_finalize(GObject *object);
 static GtkImage *get_image(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
-static GdkPixbuf *load_icon(const gchar *name, guint size)
-static void menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
-static boolean new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, DbusmenuClient *client, gpointer user_data);
+static GdkPixbuf *load_icon(const gchar *name, guint size);
+static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
+static gboolean new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, DbusmenuClient *client, gpointer user_data);
 static void receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name, GVariant *parameters, gpointer user_data);
 static void service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data);
 
@@ -282,7 +282,7 @@ receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
   return;
 }
 
-static boolean
+static gboolean
 new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, 
                           DbusmenuClient *client, gpointer user_data)
 {
