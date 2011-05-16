@@ -71,7 +71,9 @@ add_notification_item(gpointer user_data)
 
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, NOTIFICATION_MENUITEM_TYPE);
+  dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_APP_NAME, notification_get_app_name(note));
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_SUMMARY, notification_get_summary(note));
+  dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_BODY, notification_get_body(note));
   dbusmenu_menuitem_child_add_position(root, item, 1);
   g_queue_push_head(notification_items, item);
 

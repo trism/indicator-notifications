@@ -286,19 +286,46 @@ static gboolean
 new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, 
                           DbusmenuClient *client, gpointer user_data)
 {
-  g_debug("New notification item");
   g_return_val_if_fail(DBUSMENU_IS_MENUITEM(new_item), FALSE);
   g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
   g_return_val_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data), FALSE);
 
+  const gchar *app_name = dbusmenu_menuitem_property_get(new_item, 
+        NOTIFICATION_MENUITEM_PROP_APP_NAME);
+  const gchar *summary = dbusmenu_menuitem_property_get(new_item, 
+        NOTIFICATION_MENUITEM_PROP_SUMMARY);
+  const gchar *body = dbusmenu_menuitem_property_get(new_item, 
+        NOTIFICATION_MENUITEM_PROP_BODY);
+
+  gchar *escaped_app_name = g_markup_escape_text(app_name, strlen(app_name));
+  gchar *escaped_summary = g_markup_escape_text(summary, strlen(summary));
+  gchar *escaped_body = g_markup_escape_text(body, strlen(body));
+
+  gchar *markup = g_strdup_printf("<b>%s</b>\n%s\n<small><i>%s <b>%s</b></i></small>",
+      escaped_summary, escaped_body, _("from"), escaped_app_name);
+
+  g_free(escaped_app_name);
+  g_free(escaped_summary);
+  g_free(escaped_body);
+
+  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+
+  GtkWidget *label = gtk_label_new(NULL);
+  gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
+  gtk_label_set_markup(GTK_LABEL(label), markup);
+  gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+  gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
+  gtk_widget_set_size_request(label, 300, -1);
+  gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+  gtk_widget_show(label);
+
+  g_free(markup);
+
   GtkWidget *item = gtk_menu_item_new();
-  gtk_menu_item_set_label(GTK_MENU_ITEM(item), dbusmenu_menuitem_property_get(new_item,
-        NOTIFICATION_MENUITEM_PROP_SUMMARY));
-  gtk_widget_show(item);
+  gtk_container_add(GTK_CONTAINER(item), hbox);
+  gtk_widget_show(hbox);
 
   dbusmenu_gtkclient_newitem_base(DBUSMENU_GTKCLIENT(client), new_item, GTK_MENU_ITEM(item), parent);
-
-  g_object_unref(item);
 
   return TRUE;
 }
