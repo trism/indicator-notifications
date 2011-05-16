@@ -23,3 +23,5 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SERVICE_VERSION 1
 
 #define MENU_OBJ        "/com/launchpad/RecentNotifications/indicator/menu"
+
+#define DBUSMENU_NOTIFICATION_MENUITEM_TYPE "x-launchpad-recent-notifications-item"

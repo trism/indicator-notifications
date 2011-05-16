@@ -96,8 +96,9 @@ static void indicator_notifications_finalize(GObject *object);
 static GtkImage *get_image(IndicatorObject *io);
 static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
-static GdkPixbuf *load_icon(const gchar *, guint);
-static void menu_visible_notify_cb(GtkWidget *, GParamSpec *, gpointer);
+static GdkPixbuf *load_icon(const gchar *name, guint size)
+static void menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
+static boolean new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, DbusmenuClient *client, gpointer user_data);
 static void receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name, GVariant *parameters, gpointer user_data);
 static void service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data);
 
@@ -161,6 +162,10 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->menu = dbusmenu_gtkmenu_new(SERVICE_NAME, MENU_OBJ);
 
   g_signal_connect(self->priv->menu, "notify::visible", G_CALLBACK(menu_visible_notify_cb), self);
+
+  DbusmenuGtkClient *client = dbusmenu_gtkmenu_get_client(self->priv->menu);
+
+  dbusmenu_client_add_type_handler_full(DBUSMENU_CLIENT(client), DBUSMENU_NOTIFICATION_MENUITEM_TYPE, new_notification_menuitem, self, NULL);
 
   self->priv->service_proxy_cancel = g_cancellable_new();
 
@@ -275,6 +280,14 @@ receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
   }
 
   return;
+}
+
+static boolean
+new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent, 
+                          DbusmenuClient *client, gpointer user_data)
+{
+  g_debug("New notification item");
+  return TRUE;
 }
 
 static GdkPixbuf *

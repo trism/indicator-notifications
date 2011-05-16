@@ -69,6 +69,7 @@ add_notification_item(gpointer user_data)
   DbusmenuMenuitem *item;
 
   item = dbusmenu_menuitem_new();
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_NOTIFICATION_MENUITEM_TYPE);
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, notification_get_summary(note));
   dbusmenu_menuitem_child_add_position(root, item, 1);
   g_queue_push_head(notification_items, item);
