@@ -42,6 +42,7 @@ notification_init(Notification *self)
   self->priv->summary = NULL;
   self->priv->body = NULL;
   self->priv->expire_timeout = 0;
+  self->priv->timestamp = NULL;
 }
 
 static void
@@ -69,6 +70,11 @@ notification_dispose(GObject *object)
     self->priv->body = NULL;
   }
 
+  if(self->priv->timestamp != NULL) {
+    g_date_time_unref(self->priv->timestamp);
+    self->priv->timestamp = NULL;
+  }
+
   G_OBJECT_CLASS(notification_parent_class)->dispose(object);
 }
 
@@ -82,6 +88,9 @@ Notification*
 notification_new_from_dbus_message(GDBusMessage *message)
 {
   Notification *self = notification_new();
+
+  /* timestamp */
+  self->priv->timestamp = g_date_time_new_now_local();
 
   GVariant *body = g_dbus_message_get_body(message);
   GVariant *child = NULL;
@@ -144,6 +153,18 @@ const gchar*
 notification_get_body(Notification *self)
 {
   return self->priv->body;
+}
+
+gint64
+notification_get_timestamp(Notification *self)
+{
+  return g_date_time_to_unix(self->priv->timestamp);
+}
+
+gchar*
+notification_timestamp_for_locale(Notification *self)
+{
+  return g_date_time_format(self->priv->timestamp, "%X %x");
 }
 
 void

@@ -290,23 +290,22 @@ new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent,
   g_return_val_if_fail(DBUSMENU_IS_GTKCLIENT(client), FALSE);
   g_return_val_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data), FALSE);
 
-  const gchar *app_name = dbusmenu_menuitem_property_get(new_item, 
-        NOTIFICATION_MENUITEM_PROP_APP_NAME);
-  const gchar *summary = dbusmenu_menuitem_property_get(new_item, 
-        NOTIFICATION_MENUITEM_PROP_SUMMARY);
-  const gchar *body = dbusmenu_menuitem_property_get(new_item, 
-        NOTIFICATION_MENUITEM_PROP_BODY);
+  gchar *app_name = g_markup_escape_text(dbusmenu_menuitem_property_get(new_item,
+        NOTIFICATION_MENUITEM_PROP_APP_NAME), -1);
+  gchar *summary = g_markup_escape_text(dbusmenu_menuitem_property_get(new_item,
+        NOTIFICATION_MENUITEM_PROP_SUMMARY), -1);
+  gchar *body = g_markup_escape_text(dbusmenu_menuitem_property_get(new_item,
+        NOTIFICATION_MENUITEM_PROP_BODY), -1);
+  gchar *timestamp_string = g_markup_escape_text(dbusmenu_menuitem_property_get(new_item,
+        NOTIFICATION_MENUITEM_PROP_TIMESTAMP_STRING), -1);
 
-  gchar *escaped_app_name = g_markup_escape_text(app_name, strlen(app_name));
-  gchar *escaped_summary = g_markup_escape_text(summary, strlen(summary));
-  gchar *escaped_body = g_markup_escape_text(body, strlen(body));
+  gchar *markup = g_strdup_printf("<b>%s</b>\n%s\n<small><i>%s %s <b>%s</b></i></small>",
+      summary, body, timestamp_string, _("from"), app_name);
 
-  gchar *markup = g_strdup_printf("<b>%s</b>\n%s\n<small><i>%s <b>%s</b></i></small>",
-      escaped_summary, escaped_body, _("from"), escaped_app_name);
-
-  g_free(escaped_app_name);
-  g_free(escaped_summary);
-  g_free(escaped_body);
+  g_free(app_name);
+  g_free(summary);
+  g_free(body);
+  g_free(timestamp_string);
 
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 

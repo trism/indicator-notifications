@@ -75,11 +75,14 @@ add_notification_item(gpointer user_data)
     dbusmenu_menuitem_child_delete(root, empty_item);
   }
 
+  gchar *timestamp_string = notification_timestamp_for_locale(note);
+
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, NOTIFICATION_MENUITEM_TYPE);
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_APP_NAME, notification_get_app_name(note));
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_SUMMARY, notification_get_summary(note));
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_BODY, notification_get_body(note));
+  dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_TIMESTAMP_STRING, timestamp_string);
   dbusmenu_menuitem_child_prepend(root, item);
   g_queue_push_head(notification_items, item);
   length++;
@@ -97,6 +100,7 @@ add_notification_item(gpointer user_data)
   /* Notify the indicator that a new message has been added */
   notifications_interface_message_added(dbus);
 
+  g_free(timestamp_string);
   g_object_unref(note);
 
   return FALSE;

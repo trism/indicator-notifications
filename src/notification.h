@@ -8,6 +8,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <time.h>
 
 G_BEGIN_DECLS
 
@@ -33,16 +34,17 @@ struct _NotificationClass
 };
 
 struct _NotificationPrivate {
-  gchar   *app_name;
-  gsize    app_name_length;
-  guint32  replaces_id;
-  gchar   *app_icon;
-  gsize    app_icon_length;
-  gchar   *summary;
-  gsize    summary_length;
-  gchar   *body;
-  gsize    body_length;
-  gint     expire_timeout;
+  gchar     *app_name;
+  gsize      app_name_length;
+  guint32    replaces_id;
+  gchar     *app_icon;
+  gsize      app_icon_length;
+  gchar     *summary;
+  gsize      summary_length;
+  gchar     *body;
+  gsize      body_length;
+  gint       expire_timeout;
+  GDateTime *timestamp;
 };
 
 #define NOTIFICATION_GET_PRIVATE(o) \
@@ -55,6 +57,8 @@ const gchar  *notification_get_app_name(Notification *);
 const gchar  *notification_get_app_icon(Notification *);
 const gchar  *notification_get_summary(Notification *);
 const gchar  *notification_get_body(Notification *);
+gint64        notification_get_timestamp(Notification *);
+gchar        *notification_timestamp_for_locale(Notification *);
 void          notification_print(Notification *);
 
 G_END_DECLS

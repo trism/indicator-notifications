@@ -24,8 +24,9 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define MENU_OBJ        "/com/launchpad/RecentNotifications/indicator/menu"
 
-#define NOTIFICATION_MENUITEM_TYPE          "notification-menuitem"
-#define NOTIFICATION_MENUITEM_PROP_APP_NAME "notification-menuitem-prop-app-name"
-#define NOTIFICATION_MENUITEM_PROP_APP_ICON "notification-menuitem-prop-app-icon"
-#define NOTIFICATION_MENUITEM_PROP_SUMMARY  "notification-menuitem-prop-summary"
-#define NOTIFICATION_MENUITEM_PROP_BODY     "notification-menuitem-prop-body"
+#define NOTIFICATION_MENUITEM_TYPE                  "notification-menuitem"
+#define NOTIFICATION_MENUITEM_PROP_APP_NAME         "notification-menuitem-prop-app-name"
+#define NOTIFICATION_MENUITEM_PROP_APP_ICON         "notification-menuitem-prop-app-icon"
+#define NOTIFICATION_MENUITEM_PROP_SUMMARY          "notification-menuitem-prop-summary"
+#define NOTIFICATION_MENUITEM_PROP_BODY             "notification-menuitem-prop-body"
+#define NOTIFICATION_MENUITEM_PROP_TIMESTAMP_STRING "notification-menuitem-prop-timestamp-string"
