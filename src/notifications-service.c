@@ -45,8 +45,7 @@ static NotificationsInterface *dbus = NULL;
 
 /* Global Items */
 static DbusmenuMenuitem *clear_item = NULL;
-static DbusmenuMenuitem *filter_item = NULL;
-static DbusmenuMenuitem *all_applications_item = NULL;
+static DbusmenuMenuitem *empty_item = NULL;
 static GQueue *notification_items = NULL;
 static guint notification_limit = 5;
 
@@ -69,15 +68,21 @@ add_notification_item(gpointer user_data)
   Notification *note = NOTIFICATION(user_data);
   DbusmenuMenuitem *item;
 
+  guint length = g_queue_get_length(notification_items);
+
+  /* Remove the empty item from the menu */
+  if(length == 0) {
+    dbusmenu_menuitem_child_delete(root, empty_item);
+  }
+
   item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, NOTIFICATION_MENUITEM_TYPE);
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_APP_NAME, notification_get_app_name(note));
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_SUMMARY, notification_get_summary(note));
   dbusmenu_menuitem_property_set(item, NOTIFICATION_MENUITEM_PROP_BODY, notification_get_body(note));
-  dbusmenu_menuitem_child_add_position(root, item, 1);
+  dbusmenu_menuitem_child_prepend(root, item);
   g_queue_push_head(notification_items, item);
-
-  guint length = g_queue_get_length(notification_items);
+  length++;
 
   g_debug("Adding message from %s (Queue length: %d)", notification_get_app_name(note),
       length);
@@ -89,6 +94,7 @@ add_notification_item(gpointer user_data)
     item = NULL;
   }
 
+  /* Notify the indicator that a new message has been added */
   notifications_interface_message_added(dbus);
 
   g_object_unref(note);
@@ -109,6 +115,11 @@ clear_notification_items(gpointer user_data)
 
   item = NULL;
 
+  /* Add the empty item back, if it isn't already there */
+  if(dbusmenu_menuitem_child_find(root, dbusmenu_menuitem_get_id(empty_item)) == NULL) {
+    dbusmenu_menuitem_child_prepend(root, empty_item);
+  }
+
   return FALSE;
 }
 
@@ -116,24 +127,24 @@ static void
 build_menus(DbusmenuMenuitem *root)
 {
   g_debug("Building Menus.");
+
+  if(empty_item == NULL) {
+    empty_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(empty_item, DBUSMENU_MENUITEM_PROP_LABEL, _("There are 0 notifications."));
+    dbusmenu_menuitem_child_append(root, empty_item);
+  }
+
   if(clear_item == NULL) {
+    DbusmenuMenuitem *item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    dbusmenu_menuitem_child_append(root, item);
+
     clear_item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(clear_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Clear"));
-    dbusmenu_menuitem_child_prepend(root, clear_item);
+    dbusmenu_menuitem_child_append(root, clear_item);
 
     g_signal_connect(G_OBJECT(clear_item), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
         G_CALLBACK(clear_notifications_cb), NULL);
-  }
-  if(filter_item == NULL) {
-    filter_item = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(filter_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Filter"));
-    dbusmenu_menuitem_child_prepend(root, filter_item);
-
-    if(all_applications_item == NULL) {
-      all_applications_item = dbusmenu_menuitem_new();
-      dbusmenu_menuitem_property_set(all_applications_item, DBUSMENU_MENUITEM_PROP_LABEL, _("All Applications"));
-      dbusmenu_menuitem_child_append(filter_item, all_applications_item);
-    }
   }
 
   return;
