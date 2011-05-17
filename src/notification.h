@@ -45,6 +45,8 @@ struct _NotificationPrivate {
   gsize      body_length;
   gint       expire_timeout;
   GDateTime *timestamp;
+
+  gboolean   is_volume;
 };
 
 #define NOTIFICATION_GET_PRIVATE(o) \
@@ -59,6 +61,7 @@ const gchar  *notification_get_summary(Notification *);
 const gchar  *notification_get_body(Notification *);
 gint64        notification_get_timestamp(Notification *);
 gchar        *notification_timestamp_for_locale(Notification *);
+gboolean      notification_is_volume(Notification *);
 void          notification_print(Notification *);
 
 G_END_DECLS

@@ -15,6 +15,8 @@
 
 #define COLUMN_COUNT 8
 
+#define X_CANONICAL_PRIVATE_SYNCHRONOUS "x-canonical-private-synchronous"
+
 static void notification_class_init(NotificationClass *klass);
 static void notification_init(Notification *self);
 static void notification_dispose(GObject *object);
@@ -43,6 +45,7 @@ notification_init(Notification *self)
   self->priv->body = NULL;
   self->priv->expire_timeout = 0;
   self->priv->timestamp = NULL;
+  self->priv->is_volume = FALSE;
 }
 
 static void
@@ -93,7 +96,7 @@ notification_new_from_dbus_message(GDBusMessage *message)
   self->priv->timestamp = g_date_time_new_now_local();
 
   GVariant *body = g_dbus_message_get_body(message);
-  GVariant *child = NULL;
+  GVariant *child = NULL, *value = NULL;
   g_assert(g_variant_is_of_type(body, G_VARIANT_TYPE_TUPLE));
   g_assert(g_variant_n_children(body) == COLUMN_COUNT);
 
@@ -125,6 +128,18 @@ notification_new_from_dbus_message(GDBusMessage *message)
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_STRING));
   self->priv->body = g_variant_dup_string(child,
       &(self->priv->body_length));
+
+  /* hints */
+  child = g_variant_get_child_value(body, COLUMN_HINTS);
+  g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_DICTIONARY));
+
+  /* check for volume hint */
+  value = g_variant_lookup_value(child, X_CANONICAL_PRIVATE_SYNCHRONOUS, G_VARIANT_TYPE_STRING);
+  if(value != NULL) {
+    if(g_strcmp0(g_variant_get_string(value, NULL), "volume") == 0) {
+      self->priv->is_volume = TRUE;
+    }
+  }
 
   child = NULL;
 
@@ -165,6 +180,12 @@ gchar*
 notification_timestamp_for_locale(Notification *self)
 {
   return g_date_time_format(self->priv->timestamp, "%X %x");
+}
+
+gboolean
+notification_is_volume(Notification *self)
+{
+  return self->priv->is_volume;
 }
 
 void

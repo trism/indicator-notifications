@@ -217,6 +217,9 @@ log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpo
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
+  /* Discard volume notifications */
+  if(notification_is_volume(note)) return;
+
   g_object_ref(note);
   g_idle_add(add_notification_item, note);
 }
