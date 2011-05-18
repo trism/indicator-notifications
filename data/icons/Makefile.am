@@ -1,7 +1,7 @@
 iconsdir = $(INDICATORICONSDIR)/hicolor/scalable/status
 
 icons_DATA = \
-	     notification-read.svg \
-	     notification-unread.svg
+	     indicator-notification-read.svg \
+	     indicator-notification-unread.svg
 
 EXTRA_DIST = $(icons_DATA)
