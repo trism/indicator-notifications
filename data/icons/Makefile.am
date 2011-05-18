@@ -1,4 +1,4 @@
-iconsdir = $(INDICATORICONSDIR)
+iconsdir = $(INDICATORICONSDIR)/hicolor/scalable/status
 
 icons_DATA = \
 	     notification-read.svg \

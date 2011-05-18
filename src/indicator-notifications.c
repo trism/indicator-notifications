@@ -338,7 +338,7 @@ load_icon(const gchar *name, guint size)
 
   GError *error = NULL;
 
-  gchar *path = g_strdup_printf(ICONS_DIR "/%s.svg", name);
+  gchar *path = g_strdup_printf(ICONS_DIR "/hicolor/scalable/status/%s.svg", name);
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale(path, size, size, FALSE, &error);
 
   if(error != NULL) {
