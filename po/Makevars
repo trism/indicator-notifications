@@ -1,5 +1,5 @@
 DOMAIN = $(PACKAGE)
 subdir = po
 top_builddir = ..
-XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --keyword=C_:1c,2 --keyword=T_ --from-code=UTF-8
+XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --from-code=UTF-8
 EXTRA_LOCALE_CATEGORIES =
