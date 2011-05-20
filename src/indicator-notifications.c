@@ -41,7 +41,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* DBusMenu */
 #include <libdbusmenu-gtk/menu.h>
-#include <libido/libido.h>
 #include <libdbusmenu-gtk/menuitem.h>
 
 #include "dbus-shared.h"

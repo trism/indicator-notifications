@@ -22,7 +22,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <locale.h>
 
 #include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <glib/gi18n.h>
 #include <gio/gio.h>
 
