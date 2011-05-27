@@ -20,6 +20,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <config.h>
 #include <libindicator/indicator-service.h>
 #include <locale.h>
+#include <stdio.h>
 
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
@@ -50,14 +51,14 @@ static guint notification_limit = 5;
 
 /* Logging */
 #define LOG_FILE_NAME "indicator-notifications-service.log"
-static GOutputStream *log_file = NULL;
+static FILE *log_file = NULL;
 
 static gboolean add_notification_item(gpointer);
 static gboolean clear_notification_items(gpointer);
 static void build_menus(DbusmenuMenuitem *);
 static void clear_notifications_cb(DbusmenuMenuitem *, guint, gpointer);
-static void log_to_file_cb(GObject *, GAsyncResult *, gpointer);
-static void log_to_file(const gchar *, GLogLevelFlags, const gchar *, gpointer);
+static void log_cb(const gchar *, GLogLevelFlags, const gchar *, gpointer);
+static void log_init();
 static void message_received_cb(DBusSpy *, Notification *, gpointer);
 static void service_shutdown_cb(IndicatorService *, gpointer);
 
@@ -159,58 +160,58 @@ clear_notifications_cb(DbusmenuMenuitem *item, guint timestamp, gpointer user_da
   g_idle_add(clear_notification_items, NULL);
 }
 
-/* from indicator-applet */
+/* from lightdm */
 static void
-log_to_file_cb(GObject *source_obj, GAsyncResult *result, gpointer user_data)
+log_cb(const gchar *domain, GLogLevelFlags level, const gchar *message, gpointer user_data)
 {
-  g_free(user_data);
-}
+  if(log_file) {
+    const gchar *prefix;
 
-/* from indicator-applet */
-static void
-log_to_file(const gchar *domain, GLogLevelFlags level, const gchar *message, gpointer user_data)
-{
-  /* Create the log file */
-  if(log_file == NULL) {
-    GError *error = NULL;
-    gchar *filename = g_build_filename(g_get_user_cache_dir(), LOG_FILE_NAME, NULL);
-    GFile *file = g_file_new_for_path(filename);
-    g_free(filename);
-
-    /* Create the ~/.cache directory if it doesn't exist */
-    if(!g_file_test(g_get_user_cache_dir(), G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
-      GFile *cache_dir = g_file_new_for_path(g_get_user_cache_dir());
-      g_file_make_directory_with_parents(cache_dir, NULL, &error);
-
-      if(error != NULL) {
-        g_error("Unable to make directory '%s' for log file: %s", g_get_user_cache_dir(), error->message);
-        return;
-      }
+    switch(level & G_LOG_LEVEL_MASK) {
+      case G_LOG_LEVEL_ERROR:
+        prefix = "ERROR:";
+        break;
+      case G_LOG_LEVEL_CRITICAL:
+        prefix = "CRITICAL:";
+        break;
+      case G_LOG_LEVEL_WARNING:
+        prefix = "WARNING:";
+        break;
+      case G_LOG_LEVEL_MESSAGE:
+        prefix = "MESSAGE:";
+        break;
+      case G_LOG_LEVEL_INFO:
+        prefix = "INFO:";
+        break;
+      case G_LOG_LEVEL_DEBUG:
+        prefix = "DEBUG:";
+        break;
+      default:
+        prefix = "LOG:";
+        break;
     }
 
-    g_file_delete(file, NULL, NULL);
-
-    GFileIOStream *io = g_file_create_readwrite(file,
-        G_FILE_CREATE_REPLACE_DESTINATION,
-        NULL,
-        &error);
-
-    if(error != NULL) {
-      g_error("Unable to replace file: %s", error->message);
-      return;
-    }
-
-    log_file = g_io_stream_get_output_stream(G_IO_STREAM(io));
+    fprintf(log_file, "%s %s\n", prefix, message);
+    fflush(log_file);
   }
 
-  gchar *output_string = g_strdup_printf("%s\n", message);
-  g_output_stream_write_async(log_file,
-      output_string,
-      strlen(output_string),
-      G_PRIORITY_LOW,
-      NULL,
-      log_to_file_cb,
-      output_string);
+  g_log_default_handler(domain, level, message, user_data);
+}
+
+/* from lightdm */
+static void
+log_init()
+{
+  gchar *path;
+
+  g_mkdir_with_parents(g_get_user_cache_dir(), 0755);
+  path = g_build_filename(g_get_user_cache_dir(), LOG_FILE_NAME, NULL);
+
+  log_file = fopen(path, "w");
+  g_log_set_default_handler(log_cb, NULL);
+
+  g_debug("Logging to %s", path);
+  g_free(path);
 }
 
 static void
@@ -240,7 +241,7 @@ main(int argc, char **argv)
   g_type_init();
 
   /* Logging */
-  g_log_set_default_handler(log_to_file, NULL);
+  log_init();
 
   /* Acknowledging the service init and setting up the interface */
   service = indicator_service_new_version(SERVICE_NAME, SERVICE_VERSION);
@@ -277,6 +278,8 @@ main(int argc, char **argv)
   g_object_unref(G_OBJECT(service));
   g_object_unref(G_OBJECT(server));
   g_object_unref(G_OBJECT(root));
+
+  fclose(log_file);
 
   return 0;
 }
