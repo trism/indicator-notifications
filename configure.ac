@@ -1,10 +1,10 @@
 
-AC_INIT(indicator-notifications, 0.1.1, jason.conti@gmail.com)
+AC_INIT(indicator-notifications, 0.1.2, jason.conti@gmail.com)
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-notifications, 0.1.1)
+AM_INIT_AUTOMAKE(indicator-notifications, 0.1.2)
 
 AM_MAINTAINER_MODE
 
@@ -20,7 +20,7 @@ AC_PROG_LIBTOOL
 AC_SUBST(VERSION)
 AC_CONFIG_MACRO_DIR([m4])
 
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+#m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_ARG_ENABLE([deprecations],
   [AS_HELP_STRING([--enable-deprecations],
@@ -65,7 +65,8 @@ AS_IF([test "x$with_gtk" = x3],
     [PKG_CHECK_MODULES(INDICATOR, indicator3 >= $INDICATOR_REQUIRED_VERSION
                                   glib-2.0 >= $GLIB_REQUIRED_VERSION
                                   dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                  dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION)
+                                  dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
+                                  gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION)
         ],
       [test "x$with_gtk" = x2],
     [PKG_CHECK_MODULES(INDICATOR, indicator >= $INDICATOR_REQUIRED_VERSION
@@ -78,7 +79,7 @@ AS_IF([test "x$with_gtk" = x3],
 )
 
 AS_IF([test "x$with_gtk" = x3],
-	[PKG_CHECK_MODULES(SERVICE,  indicator >= $INDICATOR_REQUIRED_VERSION
+	[PKG_CHECK_MODULES(SERVICE,  indicator3 >= $INDICATOR_REQUIRED_VERSION
                                  glib-2.0 >= $GLIB_REQUIRED_VERSION
 	                             dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                  dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
