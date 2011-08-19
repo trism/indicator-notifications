@@ -37,15 +37,15 @@ libnotifications_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
-gen-%.xml.c: %.xml
+gen-notifications-service.xml.c: notifications-service.xml
 	@echo "Building $@ from $<"
-	@echo "const char * _$(subst -,_,$(subst .,_,$(basename $<))) = " > $@
+	@echo "const char * _notifications_service = " > $@
 	@sed -e "s:\":\\\\\":g" -e s:^:\": -e s:\$$:\\\\n\": $< >> $@
 	@echo ";" >> $@
 
-gen-%.xml.h: %.xml
+gen-notifications-service.xml.h: notifications-service.xml
 	@echo "Building $@ from $<"
-	@echo "extern const char * _$(subst -,_,$(subst .,_,$(basename $<)));" > $@
+	@echo "extern const char * _notifications_service;" > $@
 
 BUILT_SOURCES = \
 	gen-notifications-service.xml.c \
