@@ -26,7 +26,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <glib/gi18n.h>
 #include <gio/gio.h>
 
+#if WITH_GTK == 3
+#include <libdbusmenu-gtk3/menuitem.h>
+#else
 #include <libdbusmenu-gtk/menuitem.h>
+#endif
+
 #include <libdbusmenu-glib/server.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>

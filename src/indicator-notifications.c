@@ -40,8 +40,13 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libindicator/indicator-service-manager.h>
 
 /* DBusMenu */
+#if WITH_GTK == 3
+#include <libdbusmenu-gtk3/menu.h>
+#include <libdbusmenu-gtk3/menuitem.h>
+#else
 #include <libdbusmenu-gtk/menu.h>
 #include <libdbusmenu-gtk/menuitem.h>
+#endif
 
 #include "dbus-shared.h"
 #include "settings-shared.h"
@@ -172,7 +177,10 @@ indicator_notifications_init(IndicatorNotifications *self)
 
   DbusmenuGtkClient *client = dbusmenu_gtkmenu_get_client(self->priv->menu);
 
-  dbusmenu_client_add_type_handler_full(DBUSMENU_CLIENT(client), NOTIFICATION_MENUITEM_TYPE, new_notification_menuitem, self, NULL);
+  dbusmenu_client_add_type_handler_full(DBUSMENU_CLIENT(client), 
+      NOTIFICATION_MENUITEM_TYPE, 
+      new_notification_menuitem, 
+      self, NULL);
 
   self->priv->service_proxy_cancel = g_cancellable_new();
 
@@ -189,9 +197,6 @@ indicator_notifications_init(IndicatorNotifications *self)
   return;
 }
 
-/* Callback from trying to create the proxy for the serivce, this
-   could include starting the service.  Sometime it'll fail and
-   we'll try to start that dang service again! */
 static void
 service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 {
@@ -215,8 +220,6 @@ service_proxy_cb(GObject *object, GAsyncResult *res, gpointer user_data)
     return;
   }
 
-  /* Okay, we're good to grab the proxy at this point, we're
-  sure that it's ours. */
   priv->service_proxy = proxy;
 
   g_signal_connect(proxy, "g-signal", G_CALLBACK(receive_signal), self);
@@ -272,7 +275,6 @@ indicator_notifications_finalize(GObject *object)
   return;
 }
 
-/* Receives all signals from the service, routed to the appropriate functions */
 static void
 receive_signal(GDBusProxy *proxy, gchar *sender_name, gchar *signal_name,
                GVariant *parameters, gpointer user_data)
@@ -315,15 +317,26 @@ new_notification_menuitem(DbusmenuMenuitem *new_item, DbusmenuMenuitem *parent,
   g_free(body);
   g_free(timestamp_string);
 
+#if WITH_GTK == 3
+  GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#else
   GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+#endif
 
   GtkWidget *label = gtk_label_new(NULL);
+  gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
   gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
   gtk_label_set_markup(GTK_LABEL(label), markup);
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
+
+#if WITH_GTK == 3
+  gtk_label_set_max_width_chars(GTK_LABEL(label), 42);
+#else
   gtk_widget_set_size_request(label, 300, -1);
-  gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+#endif
+
+  gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
   gtk_widget_show(label);
 
   g_free(markup);

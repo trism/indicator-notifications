@@ -1,4 +1,5 @@
-AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"'
+AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"' \
+	      -DWITH_GTK='$(GTK_VERSION)'
 
 libexec_PROGRAMS = indicator-notifications-service
 

@@ -42,9 +42,12 @@ PKG_PROG_PKG_CONFIG
 
 AC_ARG_WITH([gtk],
   [AS_HELP_STRING([--with-gtk],
-    [Which version of gtk to use @<:@default=2@:>@])],
+    [Which version of gtk to use @<:@default=3@:>@])],
   [],
-  [with_gtk=2])
+  [with_gtk=3])
+
+GTK_VERSION=$with_gtk
+AC_SUBST(GTK_VERSION)
 
 ###########################
 # Dependencies
