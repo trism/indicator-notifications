@@ -1,10 +1,10 @@
 
-AC_INIT(indicator-notifications, 0.1.2, jason.conti@gmail.com)
+AC_INIT(indicator-notifications, 0.1.3, jason.conti@gmail.com)
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-notifications, 0.1.2)
+AM_INIT_AUTOMAKE(indicator-notifications, 0.1.3)
 
 AM_MAINTAINER_MODE
 
@@ -61,15 +61,18 @@ GLIB_REQUIRED_VERSION=2.26
 GTK_REQUIRED_VERSION=2.12
 GTK3_REQUIRED_VERSION=3.0
 
+INDICATOR_PKG_NAME=indicator-0.4
+INDICATOR3_PKG_NAME=indicator3-0.4
+
 AS_IF([test "x$with_gtk" = x3],
-    [PKG_CHECK_MODULES(INDICATOR, indicator3 >= $INDICATOR_REQUIRED_VERSION
+    [PKG_CHECK_MODULES(INDICATOR, $INDICATOR3_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
                                   glib-2.0 >= $GLIB_REQUIRED_VERSION
                                   dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                   dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
                                   gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION)
         ],
       [test "x$with_gtk" = x2],
-    [PKG_CHECK_MODULES(INDICATOR, indicator >= $INDICATOR_REQUIRED_VERSION
+    [PKG_CHECK_MODULES(INDICATOR, $INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
                                   glib-2.0 >= $GLIB_REQUIRED_VERSION
                                   dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
                                   dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
@@ -79,18 +82,18 @@ AS_IF([test "x$with_gtk" = x3],
 )
 
 AS_IF([test "x$with_gtk" = x3],
-	[PKG_CHECK_MODULES(SERVICE,  indicator3 >= $INDICATOR_REQUIRED_VERSION
-                                 glib-2.0 >= $GLIB_REQUIRED_VERSION
-	                             dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                 dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-	                             gio-2.0 >= $GIO_REQUIRED_VERSION)
+	[PKG_CHECK_MODULES(SERVICE, $INDICATOR3_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
+                                    glib-2.0 >= $GLIB_REQUIRED_VERSION
+	                            dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
+                                    dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
+	                            gio-2.0 >= $GIO_REQUIRED_VERSION)
 		],
       [test "x$with_gtk" = x2],
-	[PKG_CHECK_MODULES(SERVICE,  indicator >= $INDICATOR_REQUIRED_VERSION
-                                     glib-2.0 >= $GLIB_REQUIRED_VERSION
-	                             dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                     dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-	                             gio-2.0 >= $GIO_REQUIRED_VERSION)
+	[PKG_CHECK_MODULES(SERVICE, $INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
+                                    glib-2.0 >= $GLIB_REQUIRED_VERSION
+	                            dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
+                                    dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
+	                            gio-2.0 >= $GIO_REQUIRED_VERSION)
         ],
     [AC_MSG_FAILURE([Value for --with-gtk was neither 2 nor 3])]
 )
@@ -125,12 +128,12 @@ AS_IF([test "x$with_localinstall" = "xyes"],
 	],
 	[AS_IF([test "x$with_gtk" = "x2"],
 		[
-		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator`
-		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
+		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR_PKG_NAME`
+		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR_PKG_NAME`
 		],
 		[
-		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator3`
-		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator3`
+		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR3_PKG_NAME`
+		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR3_PKG_NAME`
 		])])
 
 AC_SUBST(INDICATORDIR)
