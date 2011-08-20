@@ -143,7 +143,10 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
 
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
-  if(!visible) {
+  if(visible) {
+    gtk_menu_reposition(GTK_MENU(menu));
+  }
+  else {
     if(self->priv->pixbuf_read != NULL) {
       self->priv->have_unread = FALSE;
       gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
