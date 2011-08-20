@@ -1,10 +1,10 @@
 
-AC_INIT(indicator-notifications, 0.1.3, jason.conti@gmail.com)
+AC_INIT(indicator-notifications, 0.1.4, jason.conti@gmail.com)
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-notifications, 0.1.3)
+AM_INIT_AUTOMAKE(indicator-notifications, 0.1.4)
 
 AM_MAINTAINER_MODE
 
