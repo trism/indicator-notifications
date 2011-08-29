@@ -256,6 +256,11 @@ indicator_notifications_dispose(GObject *object)
     self->priv->menu = NULL;
   }
 
+  if(self->priv->spy != NULL) {
+    g_object_unref(G_OBJECT(self->priv->spy));
+    self->priv->spy = NULL;
+  }
+
   G_OBJECT_CLASS (indicator_notifications_parent_class)->dispose (object);
   return;
 }
