@@ -198,7 +198,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   GtkWidget *item = new_notification_menuitem(note);
   g_object_unref(note);
 
-  gtk_menu_shell_append(GTK_MENU_SHELL(self->priv->menu), item);
+  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
 
   if(self->priv->pixbuf_unread != NULL) {
     self->priv->have_unread = TRUE;
