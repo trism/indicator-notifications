@@ -45,3 +45,5 @@ src/libnotifications.la
 src/libnotifications_la-indicator-notifications.lo
 src/gen-notifications-service.xml.c
 src/gen-notifications-service.xml.h
+src/libnotifications_la-dbus-spy.lo
+src/libnotifications_la-notification.lo

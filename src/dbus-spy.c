@@ -9,6 +9,13 @@ enum {
   LAST_SIGNAL
 };
 
+typedef struct _IdleMessage IdleMessage;
+struct _IdleMessage
+{
+  DBusSpy      *spy;
+  Notification *note;
+};
+
 static guint signals[LAST_SIGNAL];
 
 static void dbus_spy_class_init(DBusSpyClass *klass);
@@ -21,6 +28,8 @@ static void bus_get_cb(GObject *source_object, GAsyncResult *res, gpointer user_
 
 static GDBusMessage *message_filter(GDBusConnection *connection, GDBusMessage *message, 
                                     gboolean incoming, gpointer user_data);
+
+static gboolean idle_message_emit(gpointer user_data);
 
 #define MATCH_STRING "type='method_call',interface='org.freedesktop.Notifications',member='Notify'"
 
@@ -115,13 +124,27 @@ message_filter(GDBusConnection *connection, GDBusMessage *message, gboolean inco
   {
     DBusSpy *spy = DBUS_SPY(user_data);
     Notification *note = notification_new_from_dbus_message(message);
-    g_signal_emit(spy, signals[MESSAGE_RECEIVED], 0, note);
-    g_object_unref(note);
+    IdleMessage *im = g_new0(IdleMessage, 1);
+    im->spy = spy;
+    im->note = note;
+    g_idle_add(idle_message_emit, im);
     g_object_unref(message);
     message = NULL;
   }
 
   return message;
+}
+
+static gboolean
+idle_message_emit(gpointer user_data)
+{
+  IdleMessage *message = (IdleMessage *)user_data;
+
+  g_signal_emit(message->spy, signals[MESSAGE_RECEIVED], 0, message->note);
+
+  g_free(message);
+
+  return FALSE;
 }
 
 static void
