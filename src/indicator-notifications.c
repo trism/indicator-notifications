@@ -205,7 +205,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
   }
 #if WITH_GTK == 3
-  resize_menu(GTK_WIDGET(self->priv->menu));
+  //resize_menu(GTK_WIDGET(self->priv->menu));
 #endif
 }
 
