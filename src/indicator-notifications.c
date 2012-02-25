@@ -28,12 +28,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* GStuff */
 #include <glib.h>
-/*
-#include <glib/gprintf.h>
-#include <glib-object.h>
-*/
 #include <glib/gi18n-lib.h>
-/*#include <gio/gio.h> */
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 /* Indicator Stuff */
@@ -191,7 +186,8 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   /* Discard volume notifications */
-  if(notification_is_volume(note)) return;
+  if(notification_is_volume(note) || notification_is_empty(note))
+    return;
 
   GtkWidget *item = new_notification_menuitem(note);
   g_object_unref(note);

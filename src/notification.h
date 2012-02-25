@@ -62,6 +62,7 @@ const gchar  *notification_get_body(Notification *);
 gint64        notification_get_timestamp(Notification *);
 gchar        *notification_timestamp_for_locale(Notification *);
 gboolean      notification_is_volume(Notification *);
+gboolean      notification_is_empty(Notification *);
 void          notification_print(Notification *);
 
 G_END_DECLS

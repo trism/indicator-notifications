@@ -188,6 +188,16 @@ notification_is_volume(Notification *self)
   return self->priv->is_volume;
 }
 
+/**
+ * A notification is considered empty if both the summary and body do not
+ * contain any text.
+ */
+gboolean
+notification_is_empty(Notification *self)
+{
+  return (self->priv->summary_length == 0) && (self->priv->body_length == 0);
+}
+
 void
 notification_print(Notification *self)
 {
