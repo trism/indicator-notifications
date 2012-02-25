@@ -67,6 +67,8 @@ AC_CONFIG_FILES([
   tests/Makefile
 ])
 
+AC_OUTPUT
+
 AC_MSG_NOTICE([
 
 Recent Notifications Indicator Configuration:
