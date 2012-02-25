@@ -105,12 +105,14 @@ static GtkMenu     *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
 
 /* Utility Functions */
+static void       clear_menuitems(IndicatorNotifications *self);
 static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static GtkWidget *new_notification_menuitem(Notification *note);
 static void       update_clear_item_markup(IndicatorNotifications *self);
 
 /* Callbacks */
+static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static void style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
@@ -169,6 +171,7 @@ indicator_notifications_init(IndicatorNotifications *self)
   gtk_widget_show(self->priv->clear_item_label);
 
   self->priv->clear_item = gtk_menu_item_new();
+  g_signal_connect(self->priv->clear_item, "activate", G_CALLBACK(clear_item_activated_cb), self);
   gtk_container_add(GTK_CONTAINER(self->priv->clear_item), self->priv->clear_item_label);
   gtk_widget_show(self->priv->clear_item);
 
@@ -281,6 +284,33 @@ get_accessible_desc(IndicatorObject *io)
 }
 
 /**
+ * clear_menuitems:
+ * @self: the indicator
+ *
+ * Clear all notification menuitems from the menu and the visible/hidden lists.
+ **/
+static void
+clear_menuitems(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+  GList *item;
+
+  /* Remove each visible item from the menu */
+  for(item = self->priv->visible_items; item; item = item->next) {
+    gtk_container_remove(GTK_CONTAINER(self->priv->menu), GTK_WIDGET(item->data));
+  }
+
+  /* Clear the lists */
+  g_list_free_full(self->priv->visible_items, g_object_unref);
+  self->priv->visible_items = NULL;
+
+  g_list_free_full(self->priv->hidden_items, g_object_unref);
+  self->priv->hidden_items = NULL;
+
+  update_clear_item_markup(self);
+}
+
+/**
  * insert_menuitem:
  * @self: the indicator
  * @item: the menuitem to insert
@@ -291,6 +321,8 @@ get_accessible_desc(IndicatorObject *io)
 static void
 insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
 {
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+  g_return_if_fail(GTK_IS_MENU_ITEM(item));
   GList     *last_item;
   GtkWidget *last_widget;
 
@@ -326,6 +358,8 @@ insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
 static GdkPixbuf *
 load_icon(const gchar *name, gint size)
 {
+  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail(size > 0, NULL);
   GError *error = NULL;
   GdkPixbuf *pixbuf = NULL;
 
@@ -368,6 +402,7 @@ load_icon(const gchar *name, gint size)
 static GtkWidget *
 new_notification_menuitem(Notification *note)
 {
+  g_return_val_if_fail(IS_NOTIFICATION(note), NULL);
   gchar *unescaped_timestamp_string = notification_timestamp_for_locale(note);
 
   gchar *app_name = g_markup_escape_text(notification_get_app_name(note), -1);
@@ -418,6 +453,7 @@ new_notification_menuitem(Notification *note)
 static void
 update_clear_item_markup(IndicatorNotifications *self)
 {
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
   guint visible_length = g_list_length(self->priv->visible_items);
   guint hidden_length = g_list_length(self->priv->hidden_items);
   guint total_length = visible_length + hidden_length;
@@ -433,6 +469,23 @@ update_clear_item_markup(IndicatorNotifications *self)
 }
 
 /**
+ * clear_item_activated_cb:
+ * @menuitem: the clear menuitem
+ * @user_data: the indicator object
+ *
+ * Called when the clear menuitem is activated.
+ **/
+static void
+clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+  g_return_if_fail(GTK_IS_MENU_ITEM(menuitem));
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  clear_menuitems(self);
+}
+
+/**
  * menu_visible_notify_cb:
  * @menu: the menu
  * @pspec: unused
@@ -443,6 +496,8 @@ update_clear_item_markup(IndicatorNotifications *self)
 static void
 menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
 {
+  g_return_if_fail(GTK_IS_MENU(menu));
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   gboolean visible;
@@ -466,6 +521,9 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
+  g_return_if_fail(IS_DBUS_SPY(spy));
+  g_return_if_fail(IS_NOTIFICATION(note));
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   /* Discard volume notifications */
@@ -494,6 +552,8 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 static void 
 style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
 {
+  g_return_if_fail(GTK_IS_IMAGE(widget));
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
   GdkPixbuf *pixbuf_read = NULL, *pixbuf_unread = NULL;
 
