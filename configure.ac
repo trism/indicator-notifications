@@ -1,14 +1,10 @@
+AC_INIT([indicator-notifications], [0.1.4], [jason.conti@gmail.com])
 
-AC_INIT(indicator-notifications, 0.1.4, jason.conti@gmail.com)
+AM_INIT_AUTOMAKE([-Wall -Werror])
 
-AC_PREREQ(2.53)
+AM_SILENT_RULES([yes])
 
-AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(indicator-notifications, 0.1.4)
-
-AM_MAINTAINER_MODE
-
-IT_PROG_INTLTOOL([0.35.0])
+# Required compilers
 
 AC_ISC_POSIX
 AC_PROG_CC
@@ -17,185 +13,60 @@ AC_STDC_HEADERS
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-AC_SUBST(VERSION)
-AC_CONFIG_MACRO_DIR([m4])
+# Setup gettext with intltool
 
-#m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+IT_PROG_INTLTOOL
+GETTEXT_PACKAGE=$PACKAGE
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext package])
+AC_SUBST(GETTEXT_PACKAGE)
 
-AC_ARG_ENABLE([deprecations],
-  [AS_HELP_STRING([--enable-deprecations],
-    [allow deprecated API usage @<:@default=yes@:>@])],
-  [],
-  [enable_deprecations=yes])
-AS_IF([test "x$enable_deprecations" = xno],
-  [CFLAGS="$CFLAGS -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED -DGSEAL_ENABLE -DGTK_DISABLE_SINGLE_INCLUDES"]
-)
+# Helpers for GSettings
 
-AC_PATH_PROG([GLIB_MKENUMS], [glib-mkenums])
-AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
+GLIB_GSETTINGS
 
-PKG_PROG_PKG_CONFIG
-
-###########################
-# GTK+ version option
-###########################
-
-AC_ARG_WITH([gtk],
-  [AS_HELP_STRING([--with-gtk],
-    [Which version of gtk to use @<:@default=3@:>@])],
-  [],
-  [with_gtk=3])
-
-GTK_VERSION=$with_gtk
-AC_SUBST(GTK_VERSION)
-
-###########################
-# Dependencies
-###########################
+# Required libraries from pkg-config
 
 INDICATOR_REQUIRED_VERSION=0.3.19
-DBUSMENUGLIB_REQUIRED_VERSION=0.1.1
-DBUSMENUGTK_REQUIRED_VERSION=0.3.94
-GIO_REQUIRED_VERSION=2.25.11
-# Note: the GIO check below also ensures the proper glib with gsettings support is present
-#GDK_REQUIRED_VERSION=2.22
-GDK_PIXBUF_REQUIRED_VERSION=2.22
-GLIB_REQUIRED_VERSION=2.26
-GTK_REQUIRED_VERSION=2.12
 GTK3_REQUIRED_VERSION=3.0
 
-INDICATOR_PKG_NAME=indicator-0.4
 INDICATOR3_PKG_NAME=indicator3-0.4
 
-AS_IF([test "x$with_gtk" = x3],
-    [PKG_CHECK_MODULES(INDICATOR, $INDICATOR3_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
-                                  glib-2.0 >= $GLIB_REQUIRED_VERSION
-                                  dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                  dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-                                  gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION)
-        ],
-      [test "x$with_gtk" = x2],
-    [PKG_CHECK_MODULES(INDICATOR, $INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
-                                  glib-2.0 >= $GLIB_REQUIRED_VERSION
-                                  dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                  dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-                                  gdk-pixbuf-2.0 >= $GDK_PIXBUF_REQUIRED_VERSION)
-        ],
-    [AC_MSG_FAILURE([Value for --with-gtk was neither 2 nor 3])]
-)
-
-AS_IF([test "x$with_gtk" = x3],
-	[PKG_CHECK_MODULES(SERVICE, $INDICATOR3_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
-                                    glib-2.0 >= $GLIB_REQUIRED_VERSION
-	                            dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                    dbusmenu-gtk3-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-	                            gio-2.0 >= $GIO_REQUIRED_VERSION)
-		],
-      [test "x$with_gtk" = x2],
-	[PKG_CHECK_MODULES(SERVICE, $INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
-                                    glib-2.0 >= $GLIB_REQUIRED_VERSION
-	                            dbusmenu-glib-0.4 >= $DBUSMENUGLIB_REQUIRED_VERSION
-                                    dbusmenu-gtk-0.4 >= $DBUSMENUGTK_REQUIRED_VERSION
-	                            gio-2.0 >= $GIO_REQUIRED_VERSION)
-        ],
-    [AC_MSG_FAILURE([Value for --with-gtk was neither 2 nor 3])]
-)
+[PKG_CHECK_MODULES(INDICATOR, $INDICATOR3_PKG_NAME >= $INDICATOR_REQUIRED_VERSION
+                              gtk+-3.0 >= GTK3_REQUIRED_VERSION)
+]
 
 AC_SUBST(INDICATOR_CFLAGS)
 AC_SUBST(INDICATOR_LIBS)
 
-AC_SUBST(SERVICE_CFLAGS)
-AC_SUBST(SERVICE_LIBS)
-
-###########################
-# Grab the GSettings Macros
-###########################
-
-GLIB_GSETTINGS
-
-###########################
-# Check to see if we're local
-###########################
+# Library directories from pkg-config
 
 with_localinstall="no"
-AC_ARG_ENABLE(localinstall, AS_HELP_STRING([--enable-localinstall], [install all of the files localy instead of system directories (for distcheck)]), with_localinstall=$enableval, with_localinstall=no)
+AC_ARG_ENABLE([localinstall],
+              [AS_HELP_STRING([--enable-localinstall],
+                  [set default library directories instead of asking pkg-config (default is no)])],
+              [with_localinstall="yes"],
+              [with_localinstall="no"])
 
-###########################
-# Indicator Info
-###########################
-
-AS_IF([test "x$with_localinstall" = "xyes"],
-	[
-	INDICATORDIR="${libdir}/indicators/2/"
-	INDICATORICONSDIR="${datadir}/libindicate/icons/"
-	],
-	[AS_IF([test "x$with_gtk" = "x2"],
-		[
-		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR_PKG_NAME`
-		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR_PKG_NAME`
-		],
-		[
-		INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR3_PKG_NAME`
-		INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR3_PKG_NAME`
-		])])
+if test "x$with_localinstall" = "xyes"; then
+  INDICATORDIR="${libdir}/indicators/2/"
+  INDICATORICONSDIR="${datadir}/libindicate/icons/"
+else
+  INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR3_PKG_NAME`
+  INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR3_PKG_NAME`
+fi
 
 AC_SUBST(INDICATORDIR)
 AC_SUBST(INDICATORICONSDIR)
 
-###########################
-# DBus Service Info
-###########################
-
-if test "x$with_localinstall" = "xyes"; then
-	DBUSSERVICEDIR="${datadir}/dbus-1/services/"
-else
-	DBUSSERVICEDIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
-fi
-AC_SUBST(DBUSSERVICEDIR)
-
-##############################
-# Custom Junk
-##############################
-
-AC_DEFUN([AC_DEFINE_PATH], [
-	test "x$prefix" = xNONE && prefix="$ac_default_prefix"
-	test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
-	ac_define_path=`eval echo [$]$2`
-	ac_define_path=`eval echo [$]ac_define_path`
-	$1="$ac_define_path"
-	AC_SUBST($1)
-	ifelse($3, ,
-		AC_DEFINE_UNQUOTED($1, "$ac_define_path"),
-		AC_DEFINE_UNQUOTED($1, "$ac_define_path", $3))
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([
+  Makefile
+  src/Makefile
+  data/Makefile
+  data/icons/Makefile
+  po/Makefile.in
+  tests/Makefile
 ])
-
-###########################
-# Internationalization
-###########################
-
-GETTEXT_PACKAGE=indicator-notifications
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Name of the default get text domain])
-AC_DEFINE_PATH(GNOMELOCALEDIR, "${datadir}/locale", [locale directory])
-
-AM_GLIB_GNU_GETTEXT
-
-###########################
-# Files
-###########################
-
-AC_OUTPUT([
-Makefile
-src/Makefile
-data/Makefile
-data/icons/Makefile
-tests/Makefile
-po/Makefile.in
-])
-
-###########################
-# Results
-###########################
 
 AC_MSG_NOTICE([
 

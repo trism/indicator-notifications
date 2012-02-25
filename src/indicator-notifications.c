@@ -28,10 +28,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* GStuff */
 #include <glib.h>
+/*
 #include <glib/gprintf.h>
 #include <glib-object.h>
+*/
 #include <glib/gi18n-lib.h>
-#include <gio/gio.h>
+/*#include <gio/gio.h> */
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 /* Indicator Stuff */
@@ -95,10 +97,8 @@ static const gchar *get_accessible_desc(IndicatorObject *io);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 
-#if WITH_GTK == 3
 static void calculate_size_cb(GtkWidget *item, gpointer user_data);
 static void resize_menu(GtkWidget *menu);
-#endif
 
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static GtkWidget *new_notification_menuitem(Notification *note);
@@ -144,7 +144,6 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
   }
 }
 
-#if WITH_GTK == 3
 /* In GTK3 labels can now automatically wrap to fit the size of their parent,
  * however, it seems to take several tries for GtkMenu to resize properly.
  *
@@ -185,7 +184,6 @@ resize_menu(GtkWidget *menu)
   g_debug("RESIZE_MENU: W: %d H: %d -> W: %d H: %d", alloc.width, alloc.height,
       child_alloc.width, child_alloc.height);
 }
-#endif
 
 static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
@@ -204,9 +202,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     self->priv->have_unread = TRUE;
     gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
   }
-#if WITH_GTK == 3
   //resize_menu(GTK_WIDGET(self->priv->menu));
-#endif
 }
 
 static void
@@ -293,11 +289,7 @@ new_notification_menuitem(Notification *note)
   g_free(unescaped_timestamp_string);
   g_free(timestamp_string);
 
-#if WITH_GTK == 3
   GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-#else
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-#endif
 
   GtkWidget *label = gtk_label_new(NULL);
   gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
@@ -306,11 +298,7 @@ new_notification_menuitem(Notification *note)
   gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
   gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
 
-#if WITH_GTK == 3
   gtk_label_set_max_width_chars(GTK_LABEL(label), 42);
-#else
-  gtk_widget_set_size_request(label, 300, -1);
-#endif
 
   gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
   gtk_widget_show(label);

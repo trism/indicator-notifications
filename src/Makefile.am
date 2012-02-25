@@ -1,5 +1,4 @@
-AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"' \
-	      -DWITH_GTK='$(GTK_VERSION)'
+AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"'
 
 notificationslibdir = $(INDICATORDIR)
 notificationslib_LTLIBRARIES = libnotifications.la
