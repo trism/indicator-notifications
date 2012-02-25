@@ -59,22 +59,31 @@ struct _IndicatorNotifications {
 };
 
 struct _IndicatorNotificationsPrivate {
-  GtkImage *image;
+  GtkImage  *image;
 
   GdkPixbuf *pixbuf_read;
   GdkPixbuf *pixbuf_unread;
 
-  gboolean have_unread;
+  GList     *visible_items;
+  GList     *hidden_items;
 
-  GtkMenu *menu;
+  gboolean   have_unread;
 
-  gchar *accessible_desc;
+  GtkMenu   *menu;
 
-  DBusSpy *spy;
+  gchar     *accessible_desc;
+
+  DBusSpy   *spy;
 };
 
 #define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
+
+/**
+ * The maximum number of items to show in the indicator at once.
+ * FIXME: Store this value in gsettings
+ */
+#define INDICATOR_MAX_ITEMS 5
 
 #define INDICATOR_ICON_SIZE 22
 #define INDICATOR_ICON_READ   "indicator-notification-read"
@@ -91,6 +100,8 @@ static GtkMenu *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
+
+static void insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 
 static void calculate_size_cb(GtkWidget *item, gpointer user_data);
 static void resize_menu(GtkWidget *menu);
@@ -181,6 +192,29 @@ resize_menu(GtkWidget *menu)
 }
 
 static void
+insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
+{
+  GList     *last_item;
+  GtkWidget *last_widget;
+
+  /* List holds a ref to the menuitem */
+  self->priv->visible_items = g_list_prepend(self->priv->visible_items, g_object_ref(item));
+  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
+
+  /* Move items that overflow to the hidden list */
+  while(g_list_length(self->priv->visible_items) > INDICATOR_MAX_ITEMS) {
+    last_item = g_list_last(self->priv->visible_items);  
+    last_widget = GTK_WIDGET(last_item->data);
+    /* Steal the ref from the visible list */
+    self->priv->visible_items = g_list_delete_link(self->priv->visible_items, last_item);
+    self->priv->hidden_items = g_list_prepend(self->priv->hidden_items, last_widget);
+    gtk_container_remove(GTK_CONTAINER(self->priv->menu), last_widget);
+    last_item = NULL;
+    last_widget = NULL;
+  }
+}
+
+static void
 message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 {
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
@@ -192,7 +226,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   GtkWidget *item = new_notification_menuitem(note);
   g_object_unref(note);
 
-  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
+  insert_menuitem(self, item);
 
   if(self->priv->pixbuf_unread != NULL) {
     self->priv->have_unread = TRUE;
@@ -215,6 +249,9 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->have_unread = FALSE;
 
   self->priv->accessible_desc = _("Notifications");
+
+  self->priv->visible_items = NULL;
+  self->priv->hidden_items = NULL;
 
   self->priv->menu = GTK_MENU(gtk_menu_new());
   g_signal_connect(self->priv->menu, "notify::visible", G_CALLBACK(menu_visible_notify_cb), self);
@@ -241,6 +278,16 @@ indicator_notifications_dispose(GObject *object)
   if(self->priv->pixbuf_unread != NULL) {
     g_object_unref(G_OBJECT(self->priv->pixbuf_unread));
     self->priv->pixbuf_unread = NULL;
+  }
+
+  if(self->priv->visible_items != NULL) {
+    g_list_free_full(self->priv->visible_items, g_object_unref);
+    self->priv->visible_items = NULL;
+  }
+
+  if(self->priv->hidden_items != NULL) {
+    g_list_free_full(self->priv->hidden_items, g_object_unref);
+    self->priv->hidden_items = NULL;
   }
 
   if(self->priv->menu != NULL) {
