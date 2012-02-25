@@ -59,21 +59,23 @@ struct _IndicatorNotifications {
 };
 
 struct _IndicatorNotificationsPrivate {
-  GtkImage  *image;
+  GtkImage    *image;
 
-  GdkPixbuf *pixbuf_read;
-  GdkPixbuf *pixbuf_unread;
+  GdkPixbuf   *pixbuf_read;
+  GdkPixbuf   *pixbuf_unread;
 
-  GList     *visible_items;
-  GList     *hidden_items;
+  GList       *visible_items;
+  GList       *hidden_items;
 
-  gboolean   have_unread;
+  gboolean     have_unread;
 
-  GtkMenu   *menu;
+  GtkMenu     *menu;
+  GtkWidget   *clear_item;
+  GtkWidget   *clear_item_label;
 
-  gchar     *accessible_desc;
+  gchar       *accessible_desc;
 
-  DBusSpy   *spy;
+  DBusSpy     *spy;
 };
 
 #define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
@@ -102,6 +104,7 @@ static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 
 static void insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
+static void update_clear_item_markup(IndicatorNotifications *self);
 
 static void calculate_size_cb(GtkWidget *item, gpointer user_data);
 static void resize_menu(GtkWidget *menu);
@@ -192,6 +195,23 @@ resize_menu(GtkWidget *menu)
 }
 
 static void
+update_clear_item_markup(IndicatorNotifications *self)
+{
+  guint visible_length = g_list_length(self->priv->visible_items);
+  guint hidden_length = g_list_length(self->priv->hidden_items);
+  guint total_length = visible_length + hidden_length;
+
+  gchar *markup = g_strdup_printf(ngettext(
+        "Clear <small>(%d Notification)</small>",
+        "Clear <small>(%d Notifications)</small>",
+        total_length),
+      total_length);
+
+  gtk_label_set_markup(GTK_LABEL(self->priv->clear_item_label), markup);
+  g_free(markup);
+}
+
+static void
 insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
 {
   GList     *last_item;
@@ -212,6 +232,8 @@ insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
     last_item = NULL;
     last_widget = NULL;
   }
+
+  update_clear_item_markup(self);
 }
 
 static void
@@ -256,6 +278,20 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->menu = GTK_MENU(gtk_menu_new());
   g_signal_connect(self->priv->menu, "notify::visible", G_CALLBACK(menu_visible_notify_cb), self);
 
+  /* Create the clear menuitem */
+  self->priv->clear_item_label = gtk_label_new(NULL);
+  gtk_misc_set_alignment(GTK_MISC(self->priv->clear_item_label), 0, 0);
+  gtk_label_set_use_markup(GTK_LABEL(self->priv->clear_item_label), TRUE);
+  update_clear_item_markup(self);
+  gtk_widget_show(self->priv->clear_item_label);
+
+  self->priv->clear_item = gtk_menu_item_new();
+  gtk_container_add(GTK_CONTAINER(self->priv->clear_item), self->priv->clear_item_label);
+  gtk_widget_show(self->priv->clear_item);
+
+  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), self->priv->clear_item);
+
+  /* Watch for notifications from dbus */
   self->priv->spy = dbus_spy_new();
   g_signal_connect(self->priv->spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), self);
 }
