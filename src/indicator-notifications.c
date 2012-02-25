@@ -93,25 +93,27 @@ struct _IndicatorNotificationsPrivate {
 
 GType indicator_notifications_get_type(void);
 
+/* Indicator Class Functions */
 static void indicator_notifications_class_init(IndicatorNotificationsClass *klass);
 static void indicator_notifications_init(IndicatorNotifications *self);
 static void indicator_notifications_dispose(GObject *object);
 static void indicator_notifications_finalize(GObject *object);
-static GtkImage *get_image(IndicatorObject *io);
-static GtkMenu *get_menu(IndicatorObject *io);
+
+/* Indicator Standard Methods */
+static GtkImage    *get_image(IndicatorObject *io);
+static GtkMenu     *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
+
+/* Utility Functions */
+static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
-static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
-
-static void insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
-static void update_clear_item_markup(IndicatorNotifications *self);
-
-static void calculate_size_cb(GtkWidget *item, gpointer user_data);
-static void resize_menu(GtkWidget *menu);
-
-static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static GtkWidget *new_notification_menuitem(Notification *note);
-static void style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
+static void       update_clear_item_markup(IndicatorNotifications *self);
+
+/* Callbacks */
+static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
+static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
+static void style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
@@ -136,125 +138,6 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
   io_class->get_accessible_desc = get_accessible_desc;
 
   return;
-}
-
-static void
-menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
-
-  gboolean visible;
-  g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
-  if(!visible) {
-    if(self->priv->pixbuf_read != NULL) {
-      self->priv->have_unread = FALSE;
-      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
-    }
-  }
-}
-
-/* In GTK3 labels can now automatically wrap to fit the size of their parent,
- * however, it seems to take several tries for GtkMenu to resize properly.
- *
- * As a workaround, calculate the preferred size for each of the menu items and
- * set the menu's size request appropriately.
- */
-static void
-calculate_size_cb(GtkWidget *item, gpointer user_data)
-{
-  GtkAllocation *alloc = (GtkAllocation *)user_data;
-  gint width;
-  gint height;
-
-  gtk_widget_get_preferred_width(item, NULL, &width);
-  gtk_widget_get_preferred_height_for_width(item, width, NULL, &height);
-
-  if(alloc->width < width)
-    alloc->width = width;
-
-  alloc->height += height;
-}
-
-static void
-resize_menu(GtkWidget *menu)
-{
-  GtkAllocation alloc;
-  GtkAllocation child_alloc;
-
-  gtk_widget_get_allocation(menu, &alloc);
-
-  child_alloc.x = 0;
-  child_alloc.y = 0;
-  child_alloc.width = 1;
-  child_alloc.height = 1;
-
-  gtk_container_foreach(GTK_CONTAINER(menu), calculate_size_cb, &child_alloc);
-  gtk_widget_set_size_request(menu, child_alloc.width, child_alloc.height);
-  g_debug("RESIZE_MENU: W: %d H: %d -> W: %d H: %d", alloc.width, alloc.height,
-      child_alloc.width, child_alloc.height);
-}
-
-static void
-update_clear_item_markup(IndicatorNotifications *self)
-{
-  guint visible_length = g_list_length(self->priv->visible_items);
-  guint hidden_length = g_list_length(self->priv->hidden_items);
-  guint total_length = visible_length + hidden_length;
-
-  gchar *markup = g_strdup_printf(ngettext(
-        "Clear <small>(%d Notification)</small>",
-        "Clear <small>(%d Notifications)</small>",
-        total_length),
-      total_length);
-
-  gtk_label_set_markup(GTK_LABEL(self->priv->clear_item_label), markup);
-  g_free(markup);
-}
-
-static void
-insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
-{
-  GList     *last_item;
-  GtkWidget *last_widget;
-
-  /* List holds a ref to the menuitem */
-  self->priv->visible_items = g_list_prepend(self->priv->visible_items, g_object_ref(item));
-  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
-
-  /* Move items that overflow to the hidden list */
-  while(g_list_length(self->priv->visible_items) > INDICATOR_MAX_ITEMS) {
-    last_item = g_list_last(self->priv->visible_items);  
-    last_widget = GTK_WIDGET(last_item->data);
-    /* Steal the ref from the visible list */
-    self->priv->visible_items = g_list_delete_link(self->priv->visible_items, last_item);
-    self->priv->hidden_items = g_list_prepend(self->priv->hidden_items, last_widget);
-    gtk_container_remove(GTK_CONTAINER(self->priv->menu), last_widget);
-    last_item = NULL;
-    last_widget = NULL;
-  }
-
-  update_clear_item_markup(self);
-}
-
-static void
-message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
-
-  /* Discard volume notifications */
-  if(notification_is_volume(note) || notification_is_empty(note))
-    return;
-
-  GtkWidget *item = new_notification_menuitem(note);
-  g_object_unref(note);
-
-  insert_menuitem(self, item);
-
-  if(self->priv->pixbuf_unread != NULL) {
-    self->priv->have_unread = TRUE;
-    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
-  }
-  //resize_menu(GTK_WIDGET(self->priv->menu));
 }
 
 static void
@@ -349,6 +232,139 @@ indicator_notifications_finalize(GObject *object)
   return;
 }
 
+static GtkImage *
+get_image(IndicatorObject *io)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
+
+  if(self->priv->image == NULL) {
+    self->priv->image = GTK_IMAGE(gtk_image_new());
+
+    self->priv->pixbuf_read = load_icon(INDICATOR_ICON_READ, INDICATOR_ICON_SIZE);
+
+    if(self->priv->pixbuf_read == NULL) {
+      g_error("Failed to load read icon");
+      return NULL;
+    }
+
+    self->priv->pixbuf_unread = load_icon(INDICATOR_ICON_UNREAD, INDICATOR_ICON_SIZE);
+
+    if(self->priv->pixbuf_unread == NULL) {
+      g_error("Failed to load unread icon");
+      return NULL;
+    }
+
+    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
+
+    g_signal_connect(G_OBJECT(self->priv->image), "style-set", G_CALLBACK(style_changed_cb), self);
+
+    gtk_widget_show(GTK_WIDGET(self->priv->image));
+  }
+
+  return self->priv->image;
+}
+
+static GtkMenu *
+get_menu(IndicatorObject *io)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
+
+  return GTK_MENU(self->priv->menu);
+}
+
+static const gchar *
+get_accessible_desc(IndicatorObject *io)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
+
+  return self->priv->accessible_desc;
+}
+
+/**
+ * insert_menuitem:
+ * @self: the indicator
+ * @item: the menuitem to insert
+ *
+ * Inserts a menuitem into the indicator's menu and updates the visible and
+ * hidden lists.
+ **/
+static void
+insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
+{
+  GList     *last_item;
+  GtkWidget *last_widget;
+
+  /* List holds a ref to the menuitem */
+  self->priv->visible_items = g_list_prepend(self->priv->visible_items, g_object_ref(item));
+  gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
+
+  /* Move items that overflow to the hidden list */
+  while(g_list_length(self->priv->visible_items) > INDICATOR_MAX_ITEMS) {
+    last_item = g_list_last(self->priv->visible_items);  
+    last_widget = GTK_WIDGET(last_item->data);
+    /* Steal the ref from the visible list */
+    self->priv->visible_items = g_list_delete_link(self->priv->visible_items, last_item);
+    self->priv->hidden_items = g_list_prepend(self->priv->hidden_items, last_widget);
+    gtk_container_remove(GTK_CONTAINER(self->priv->menu), last_widget);
+    last_item = NULL;
+    last_widget = NULL;
+  }
+
+  update_clear_item_markup(self);
+}
+
+/**
+ * load_icon:
+ * @name: the icon name
+ * @size: the icon size
+ *
+ * Tries to load the icon first from the default icon theme, then from an
+ * absolute path.
+ *
+ * Returns: a new gdk pixbuf
+ **/
+static GdkPixbuf *
+load_icon(const gchar *name, gint size)
+{
+  GError *error = NULL;
+  GdkPixbuf *pixbuf = NULL;
+
+  /* First try to load the icon from the icon theme */
+  GtkIconTheme *theme = gtk_icon_theme_get_default();
+
+  if(gtk_icon_theme_has_icon(theme, name)) {
+    pixbuf = gtk_icon_theme_load_icon(theme, name, size, GTK_ICON_LOOKUP_FORCE_SVG, &error);
+
+    if(error != NULL) {
+      g_warning("Failed to load icon '%s' from icon theme: %s", name, error->message);
+    }
+    else {
+      return pixbuf;
+    }
+  }
+
+  /* Otherwise load from the icon installation path */
+  gchar *path = g_strdup_printf(ICONS_DIR "/hicolor/scalable/status/%s.svg", name);
+  pixbuf = gdk_pixbuf_new_from_file_at_scale(path, size, size, FALSE, &error);
+
+  if(error != NULL) {
+    g_warning("Failed to load icon at '%s': %s", path, error->message);
+    pixbuf = NULL;
+  }
+
+  g_free(path);
+
+  return pixbuf;
+}
+
+/**
+ * new_notification_menuitem:
+ * @note: the notification object
+ *
+ * Constructs a new notification menuitem from the given notification object.
+ *
+ * Returns: a new notification menuitem
+ **/
 static GtkWidget *
 new_notification_menuitem(Notification *note)
 {
@@ -392,8 +408,91 @@ new_notification_menuitem(Notification *note)
   return item;
 }
 
+/**
+ * update_clear_item_markup:
+ * @self: the indicator object
+ *
+ * Updates the clear menuitem's label markup based on the number of
+ * notifications available.
+ **/
+static void
+update_clear_item_markup(IndicatorNotifications *self)
+{
+  guint visible_length = g_list_length(self->priv->visible_items);
+  guint hidden_length = g_list_length(self->priv->hidden_items);
+  guint total_length = visible_length + hidden_length;
+
+  gchar *markup = g_strdup_printf(ngettext(
+        "Clear <small>(%d Notification)</small>",
+        "Clear <small>(%d Notifications)</small>",
+        total_length),
+      total_length);
+
+  gtk_label_set_markup(GTK_LABEL(self->priv->clear_item_label), markup);
+  g_free(markup);
+}
+
+/**
+ * menu_visible_notify_cb:
+ * @menu: the menu
+ * @pspec: unused
+ * @user_data: the indicator object
+ *
+ * Called when the indicator's menu is shown or hidden.
+ **/
+static void
+menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointer user_data)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  gboolean visible;
+  g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
+  if(!visible) {
+    if(self->priv->pixbuf_read != NULL) {
+      self->priv->have_unread = FALSE;
+      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
+    }
+  }
+}
+
+/**
+ * message_received_cb:
+ * @spy: the dbus notification monitor
+ * @note: the notification received
+ * @user_data: the indicator object
+ *
+ * Called when a notification arrives on dbus.
+ **/
+static void
+message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  /* Discard volume notifications */
+  if(notification_is_volume(note) || notification_is_empty(note))
+    return;
+
+  GtkWidget *item = new_notification_menuitem(note);
+  g_object_unref(note);
+
+  insert_menuitem(self, item);
+
+  if(self->priv->pixbuf_unread != NULL) {
+    self->priv->have_unread = TRUE;
+    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
+  }
+}
+
+/**
+ * style_changed_cb:
+ * @widget: the indicator image
+ * @oldstyle: unused
+ * @user_data: the indicator object
+ *
+ * Called when the theme changes, and reloads the indicator icons.
+ **/
 static void 
-style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
+style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
 {
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
   GdkPixbuf *pixbuf_read = NULL, *pixbuf_unread = NULL;
@@ -426,84 +525,3 @@ style_changed(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
   }
 }
 
-static GdkPixbuf *
-load_icon(const gchar *name, gint size)
-{
-  GError *error = NULL;
-  GdkPixbuf *pixbuf = NULL;
-
-  /* First try to load the icon from the icon theme */
-  GtkIconTheme *theme = gtk_icon_theme_get_default();
-
-  if(gtk_icon_theme_has_icon(theme, name)) {
-    pixbuf = gtk_icon_theme_load_icon(theme, name, size, GTK_ICON_LOOKUP_FORCE_SVG, &error);
-
-    if(error != NULL) {
-      g_warning("Failed to load icon '%s' from icon theme: %s", name, error->message);
-    }
-    else {
-      return pixbuf;
-    }
-  }
-
-  /* Otherwise load from the icon installation path */
-  gchar *path = g_strdup_printf(ICONS_DIR "/hicolor/scalable/status/%s.svg", name);
-  pixbuf = gdk_pixbuf_new_from_file_at_scale(path, size, size, FALSE, &error);
-
-  if(error != NULL) {
-    g_warning("Failed to load icon at '%s': %s", path, error->message);
-    pixbuf = NULL;
-  }
-
-  g_free(path);
-
-  return pixbuf;
-}
-
-static GtkImage *
-get_image(IndicatorObject *io)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-
-  if(self->priv->image == NULL) {
-    self->priv->image = GTK_IMAGE(gtk_image_new());
-
-    self->priv->pixbuf_read = load_icon(INDICATOR_ICON_READ, INDICATOR_ICON_SIZE);
-
-    if(self->priv->pixbuf_read == NULL) {
-      g_error("Failed to load read icon");
-      return NULL;
-    }
-
-    self->priv->pixbuf_unread = load_icon(INDICATOR_ICON_UNREAD, INDICATOR_ICON_SIZE);
-
-    if(self->priv->pixbuf_unread == NULL) {
-      g_error("Failed to load unread icon");
-      return NULL;
-    }
-
-    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
-
-    g_signal_connect(G_OBJECT(self->priv->image), "style-set", G_CALLBACK(style_changed), self);
-
-    gtk_widget_show(GTK_WIDGET(self->priv->image));
-  }
-
-  return self->priv->image;
-}
-
-static GtkMenu *
-get_menu(IndicatorObject *io)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-
-  return GTK_MENU(self->priv->menu);
-}
-
-static const gchar *
-get_accessible_desc(IndicatorObject *io)
-{
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
-
-  return self->priv->accessible_desc;
-}
