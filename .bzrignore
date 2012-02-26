@@ -49,3 +49,4 @@ src/libnotifications_la-dbus-spy.lo
 src/libnotifications_la-notification.lo
 src/libnotifications_la-notification-menu.lo
 *.tar.gz
+src/libnotifications_la-notification-menuitem.lo

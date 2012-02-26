@@ -37,6 +37,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libindicator/indicator-service-manager.h>
 
 #include "dbus-spy.h"
+#include "notification-menuitem.h"
 
 #define INDICATOR_NOTIFICATIONS_TYPE            (indicator_notifications_get_type ())
 #define INDICATOR_NOTIFICATIONS(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotifications))
@@ -577,9 +578,11 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   if(notification_is_private(note) || notification_is_empty(note))
     return;
 
-  GtkWidget *item = new_notification_menuitem(note);
+  GtkWidget *item = notification_menuitem_new();
+  notification_menuitem_set_from_notification(NOTIFICATION_MENUITEM(item), note);
   g_signal_connect(item, "button-press-event", G_CALLBACK(notification_button_press_cb), self);
   g_signal_connect(item, "button-release-event", G_CALLBACK(notification_button_release_cb), self);
+  gtk_widget_show(item);
   g_object_unref(note);
 
   insert_menuitem(self, item);
