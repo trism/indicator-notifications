@@ -19,6 +19,7 @@ enum {
 static void notification_menuitem_class_init(NotificationMenuItemClass *klass);
 static void notification_menuitem_init(NotificationMenuItem *self);
 
+static void     notification_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static gboolean notification_button_press_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 static gboolean notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
@@ -69,6 +70,7 @@ notification_menuitem_init(NotificationMenuItem *self)
   gtk_container_add(GTK_CONTAINER(self), hbox);
   gtk_widget_show(hbox);
 
+  g_signal_connect(self, "activate", G_CALLBACK(notification_activated_cb), NULL);
   g_signal_connect(self, "button-press-event", G_CALLBACK(notification_button_press_cb), NULL);
   g_signal_connect(self, "button-release-event", G_CALLBACK(notification_button_release_cb), NULL);
 }
@@ -102,6 +104,21 @@ notification_menuitem_set_from_notification(NotificationMenuItem *self, Notifica
   gtk_label_set_markup(GTK_LABEL(self->priv->label), markup);
 
   g_free(markup);
+}
+
+/**
+ * notification_activated_cb:
+ * @menuitem: the menuitem
+ * @user_data: not used
+ *
+ * Emit a clicked event for the case where a keyboard activates a menuitem.
+ **/
+static void
+notification_activated_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+  g_return_if_fail(IS_NOTIFICATION_MENUITEM(menuitem));
+
+  g_signal_emit(NOTIFICATION_MENUITEM(menuitem), notification_menuitem_signals[CLICKED], 0);
 }
 
 /**
