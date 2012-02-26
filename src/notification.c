@@ -2,6 +2,7 @@
  * notification.c - A gobject subclass to represent a org.freedesktop.Notification.Notify message.
  */
 
+#include <string.h>
 #include "notification.h"
 
 #define COLUMN_APP_NAME       0
@@ -45,7 +46,7 @@ notification_init(Notification *self)
   self->priv->body = NULL;
   self->priv->expire_timeout = 0;
   self->priv->timestamp = NULL;
-  self->priv->is_volume = FALSE;
+  self->priv->is_private = FALSE;
 }
 
 static void
@@ -122,12 +123,16 @@ notification_new_from_dbus_message(GDBusMessage *message)
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_STRING));
   self->priv->summary = g_variant_dup_string(child,
       &(self->priv->summary_length));
+  g_strstrip(self->priv->summary);
+  self->priv->summary_length = strlen(self->priv->summary);
 
   /* body */
   child = g_variant_get_child_value(body, COLUMN_BODY);
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_STRING));
   self->priv->body = g_variant_dup_string(child,
       &(self->priv->body_length));
+  g_strstrip(self->priv->body);
+  self->priv->body_length = strlen(self->priv->body);
 
   /* hints */
   child = g_variant_get_child_value(body, COLUMN_HINTS);
@@ -136,8 +141,12 @@ notification_new_from_dbus_message(GDBusMessage *message)
   /* check for volume hint */
   value = g_variant_lookup_value(child, X_CANONICAL_PRIVATE_SYNCHRONOUS, G_VARIANT_TYPE_STRING);
   if(value != NULL) {
-    if(g_strcmp0(g_variant_get_string(value, NULL), "volume") == 0) {
-      self->priv->is_volume = TRUE;
+    const gchar *private_string = g_variant_get_string(value, NULL);
+
+    if((g_strcmp0(private_string, "volume") == 0) ||
+       (g_strcmp0(private_string, "brightness") == 0) ||
+       (g_strcmp0(private_string, "indicator-sound") == 0)) {
+      self->priv->is_private = TRUE;
     }
   }
 
@@ -183,9 +192,9 @@ notification_timestamp_for_locale(Notification *self)
 }
 
 gboolean
-notification_is_volume(Notification *self)
+notification_is_private(Notification *self)
 {
-  return self->priv->is_volume;
+  return self->priv->is_private;
 }
 
 /**

@@ -573,8 +573,8 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
-  /* Discard volume notifications */
-  if(notification_is_volume(note) || notification_is_empty(note))
+  /* Discard useless notifications */
+  if(notification_is_private(note) || notification_is_empty(note))
     return;
 
   GtkWidget *item = new_notification_menuitem(note);
