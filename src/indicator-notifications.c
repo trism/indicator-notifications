@@ -107,6 +107,7 @@ static const gchar *get_accessible_desc(IndicatorObject *io);
 /* Utility Functions */
 static void       clear_menuitems(IndicatorNotifications *self);
 static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
+static void       remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static GtkWidget *new_notification_menuitem(Notification *note);
 static void       update_clear_item_markup(IndicatorNotifications *self);
@@ -115,6 +116,7 @@ static void       update_clear_item_markup(IndicatorNotifications *self);
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
+static void notification_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
 
 /* Indicator Module Config */
@@ -346,6 +348,45 @@ insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
 }
 
 /**
+ * remove_menuitem:
+ * @self: the indicator object
+ * @item: the menuitem
+ *
+ * Removes a menuitem from the indicator menu and the visible list.
+ **/
+static void
+remove_menuitem(IndicatorNotifications *self, GtkWidget *item)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+  g_return_if_fail(GTK_IS_MENU_ITEM(item));
+
+  GList *list_item = g_list_find(self->priv->visible_items, item);
+
+  if(list_item == NULL) {
+    g_warning("Attempt to remove menuitem not in visible list");
+    return;
+  }
+
+  /* Remove the item */
+  gtk_container_remove(GTK_CONTAINER(self->priv->menu), item);
+  self->priv->visible_items = g_list_delete_link(self->priv->visible_items, list_item);
+  g_object_unref(item);
+
+  /* Add an item from the hidden list, if available */
+  if(g_list_length(self->priv->hidden_items) > 0) {
+    list_item = g_list_first(self->priv->hidden_items);
+    GtkWidget *list_widget = GTK_WIDGET(list_item->data);
+    self->priv->hidden_items = g_list_delete_link(self->priv->hidden_items, list_item);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(self->priv->menu), list_widget,
+        g_list_length(self->priv->visible_items));
+    /* Steal the ref back from the hidden list */
+    self->priv->visible_items = g_list_append(self->priv->visible_items, list_widget);
+  }
+
+  update_clear_item_markup(self);
+}
+
+/**
  * load_icon:
  * @name: the icon name
  * @size: the icon size
@@ -435,7 +476,7 @@ new_notification_menuitem(Notification *note)
 
   g_free(markup);
 
-  GtkWidget *item = gtk_menu_item_new();
+  GtkWidget *item = gtk_check_menu_item_new();
   gtk_container_add(GTK_CONTAINER(item), hbox);
   gtk_widget_show(hbox);
   gtk_widget_show(item);
@@ -531,6 +572,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     return;
 
   GtkWidget *item = new_notification_menuitem(note);
+  g_signal_connect(item, "activate", G_CALLBACK(notification_item_activated_cb), self);
   g_object_unref(note);
 
   insert_menuitem(self, item);
@@ -539,6 +581,23 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     self->priv->have_unread = TRUE;
     gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
   }
+}
+
+/**
+ * notification_item_activated_cb:
+ * @menuitem: the menuitem
+ * @user_data: the indicator object
+ *
+ * Call when a notification item is activated.
+ **/
+static void
+notification_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data)
+{
+  g_return_if_fail(GTK_IS_MENU_ITEM(menuitem));
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  remove_menuitem(self, GTK_WIDGET(menuitem));
 }
 
 /**
