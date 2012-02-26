@@ -116,8 +116,10 @@ static void       update_clear_item_markup(IndicatorNotifications *self);
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
-static void notification_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
+
+static gboolean notification_button_press_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+static gboolean notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
@@ -476,7 +478,11 @@ new_notification_menuitem(Notification *note)
 
   g_free(markup);
 
-  GtkWidget *item = gtk_check_menu_item_new();
+  GtkWidget *close_image = gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+  gtk_widget_show(close_image);
+  gtk_box_pack_start(GTK_BOX(hbox), close_image, FALSE, FALSE, 0);
+
+  GtkWidget *item = gtk_menu_item_new();
   gtk_container_add(GTK_CONTAINER(item), hbox);
   gtk_widget_show(hbox);
   gtk_widget_show(item);
@@ -572,7 +578,8 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     return;
 
   GtkWidget *item = new_notification_menuitem(note);
-  g_signal_connect(item, "activate", G_CALLBACK(notification_item_activated_cb), self);
+  g_signal_connect(item, "button-press-event", G_CALLBACK(notification_button_press_cb), self);
+  g_signal_connect(item, "button-release-event", G_CALLBACK(notification_button_release_cb), self);
   g_object_unref(note);
 
   insert_menuitem(self, item);
@@ -581,23 +588,6 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     self->priv->have_unread = TRUE;
     gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
   }
-}
-
-/**
- * notification_item_activated_cb:
- * @menuitem: the menuitem
- * @user_data: the indicator object
- *
- * Call when a notification item is activated.
- **/
-static void
-notification_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data)
-{
-  g_return_if_fail(GTK_IS_MENU_ITEM(menuitem));
-  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
-
-  remove_menuitem(self, GTK_WIDGET(menuitem));
 }
 
 /**
@@ -644,3 +634,38 @@ style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
   }
 }
 
+/**
+ * notification_button_press_cb:
+ * @widget: the menuitem
+ * @event: the button press event
+ * @user_data: the indicator object
+ *
+ * Override the menuitem button-press-event.
+ **/
+static gboolean
+notification_button_press_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+  return TRUE;
+}
+
+/**
+ * notification_button_release_cb:
+ * @widget: the menuitem
+ * @event: the button release event
+ * @user_data: the indicator object
+ *
+ * Override the menuitem button-release-event so that the menu isn't hidden when the
+ * item is removed.
+ *
+ * FIXME: Only remove the item when the close image is clicked.
+ **/
+static gboolean
+notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+  g_return_val_if_fail(GTK_IS_MENU_ITEM(widget), FALSE);
+  g_return_val_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data), FALSE);
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  remove_menuitem(self, widget);
+  return TRUE;
+}
