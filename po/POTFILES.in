@@ -1,5 +1,3 @@
 src/dbus-spy.c
 src/indicator-notifications.c
 src/notification.c
-src/notifications-interface.c
-src/notifications-service.c

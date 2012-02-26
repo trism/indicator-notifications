@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-18 14:30-0400\n"
+"POT-Creation-Date: 2012-02-25 23:02-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,19 +16,19 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/indicator-notifications.c:158
+#: ../src/indicator-notifications.c:162
 msgid "Notifications"
 msgstr ""
 
-#: ../src/indicator-notifications.c:303
+#: ../src/indicator-notifications.c:457
 msgid "from"
 msgstr ""
 
-#: ../src/notifications-service.c:137
-msgid "There are 0 notifications."
-msgstr ""
-
-#: ../src/notifications-service.c:147
-msgid "Clear"
-msgstr ""
+#: ../src/indicator-notifications.c:509
+#, c-format
+msgid "Clear <small>(%d Notification)</small>"
+msgid_plural "Clear <small>(%d Notifications)</small>"
+msgstr[0] ""
+msgstr[1] ""
