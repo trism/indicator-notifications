@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-25 23:02-0500\n"
+"POT-Creation-Date: 2012-02-26 15:13-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,17 +18,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/indicator-notifications.c:162
+#: ../src/indicator-notifications.c:160
 msgid "Notifications"
 msgstr ""
 
-#: ../src/indicator-notifications.c:457
-msgid "from"
-msgstr ""
-
-#: ../src/indicator-notifications.c:509
+#: ../src/indicator-notifications.c:451
 #, c-format
 msgid "Clear <small>(%d Notification)</small>"
 msgid_plural "Clear <small>(%d Notifications)</small>"
 msgstr[0] ""
 msgstr[1] ""
+
+#: ../src/notification-menuitem.c:96
+msgid "from"
+msgstr ""
