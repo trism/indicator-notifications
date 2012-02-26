@@ -11,8 +11,18 @@
 
 #define NOTIFICATION_MENUITEM_MAX_CHARS 42
 
+enum {
+  CLICKED,
+  LAST_SIGNAL
+};
+
 static void notification_menuitem_class_init(NotificationMenuItemClass *klass);
 static void notification_menuitem_init(NotificationMenuItem *self);
+
+static gboolean notification_button_press_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+static gboolean notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+
+static guint notification_menuitem_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (NotificationMenuItem, notification_menuitem, GTK_TYPE_MENU_ITEM);
 
@@ -24,6 +34,15 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
   g_type_class_add_private(klass, sizeof(NotificationMenuItemPrivate));
 
   menu_item_class->hide_on_activate = FALSE;
+
+  notification_menuitem_signals[CLICKED] =
+    g_signal_new(NOTIFICATION_MENUITEM_SIGNAL_CLICKED,
+                 G_TYPE_FROM_CLASS(klass),
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(NotificationMenuItemClass, clicked),
+                 NULL, NULL,
+                 g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
 }
 
 static void
@@ -49,6 +68,9 @@ notification_menuitem_init(NotificationMenuItem *self)
 
   gtk_container_add(GTK_CONTAINER(self), hbox);
   gtk_widget_show(hbox);
+
+  g_signal_connect(self, "button-press-event", G_CALLBACK(notification_button_press_cb), NULL);
+  g_signal_connect(self, "button-release-event", G_CALLBACK(notification_button_release_cb), NULL);
 }
 
 GtkWidget * 
@@ -80,4 +102,38 @@ notification_menuitem_set_from_notification(NotificationMenuItem *self, Notifica
   gtk_label_set_markup(GTK_LABEL(self->priv->label), markup);
 
   g_free(markup);
+}
+
+/**
+ * notification_button_press_cb:
+ * @widget: the menuitem
+ * @event: the button press event
+ * @user_data: not used
+ *
+ * Override the menuitem button-press-event.
+ **/
+static gboolean
+notification_button_press_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+  return TRUE;
+}
+
+/**
+ * notification_button_release_cb:
+ * @widget: the menuitem
+ * @event: the button release event
+ * @user_data: not used
+ *
+ * Override the menuitem button-release-event so that the menu isn't hidden when the
+ * item is removed.
+ *
+ * FIXME: Only remove the item when the close image is clicked.
+ **/
+static gboolean
+notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+  g_return_val_if_fail(IS_NOTIFICATION_MENUITEM(widget), FALSE);
+
+  g_signal_emit(NOTIFICATION_MENUITEM(widget), notification_menuitem_signals[CLICKED], 0);
+  return TRUE;
 }
