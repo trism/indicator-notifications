@@ -104,12 +104,17 @@ static void indicator_notifications_finalize(GObject *object);
 static GtkImage    *get_image(IndicatorObject *io);
 static GtkMenu     *get_menu(IndicatorObject *io);
 static const gchar *get_accessible_desc(IndicatorObject *io);
+static void         indicator_notifications_middle_click(IndicatorObject *io, 
+                                                         IndicatorObjectEntry *entry,
+                                                         guint time,
+                                                         gpointer user_data);
 
 /* Utility Functions */
 static void       clear_menuitems(IndicatorNotifications *self);
 static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void       remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
+static void       set_unread(IndicatorNotifications *self, gboolean unread);
 static void       update_clear_item_markup(IndicatorNotifications *self);
 
 /* Callbacks */
@@ -140,6 +145,7 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
   io_class->get_image = get_image;
   io_class->get_menu = get_menu;
   io_class->get_accessible_desc = get_accessible_desc;
+  io_class->secondary_activate = indicator_notifications_middle_click;
 
   return;
 }
@@ -231,8 +237,6 @@ indicator_notifications_dispose(GObject *object)
 static void
 indicator_notifications_finalize(GObject *object)
 {
-  /*IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(object);*/
-
   G_OBJECT_CLASS (indicator_notifications_parent_class)->finalize (object);
   return;
 }
@@ -283,6 +287,16 @@ get_accessible_desc(IndicatorObject *io)
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
 
   return self->priv->accessible_desc;
+}
+
+static void
+indicator_notifications_middle_click(IndicatorObject *io, IndicatorObjectEntry *entry,
+                                     guint time, gpointer user_data)
+{
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
+
+  if(g_list_length(self->priv->visible_items) > 0)
+    set_unread(self, !self->priv->have_unread);
 }
 
 /**
@@ -433,6 +447,30 @@ load_icon(const gchar *name, gint size)
 }
 
 /**
+ * set_unread:
+ * @self: the indicator object
+ * @unread: the unread status
+ *
+ * Sets the unread status of the indicator and updates the icons.
+ **/
+static void
+set_unread(IndicatorNotifications *self, gboolean unread)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+
+  if(unread) {
+    if(self->priv->pixbuf_unread != NULL)
+      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
+  }
+  else {
+    if(self->priv->pixbuf_read != NULL)
+      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
+  }
+
+  self->priv->have_unread = unread;
+}
+
+/**
  * update_clear_item_markup:
  * @self: the indicator object
  *
@@ -492,10 +530,7 @@ menu_visible_notify_cb(GtkWidget *menu, G_GNUC_UNUSED GParamSpec *pspec, gpointe
   gboolean visible;
   g_object_get(G_OBJECT(menu), "visible", &visible, NULL);
   if(!visible) {
-    if(self->priv->pixbuf_read != NULL) {
-      self->priv->have_unread = FALSE;
-      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
-    }
+    set_unread(self, FALSE);
   }
 }
 
@@ -527,10 +562,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
 
   insert_menuitem(self, item);
 
-  if(self->priv->pixbuf_unread != NULL) {
-    self->priv->have_unread = TRUE;
-    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
-  }
+  set_unread(self, TRUE);
 }
 
 /**
