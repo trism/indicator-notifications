@@ -122,7 +122,7 @@ static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static void notification_clicked_cb(NotificationMenuItem *menuitem, gpointer user_data);
-static void style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data);
+static void style_changed_cb(GtkWidget *widget, gpointer user_data);
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
@@ -265,7 +265,7 @@ get_image(IndicatorObject *io)
 
     gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
 
-    g_signal_connect(G_OBJECT(self->priv->image), "style-set", G_CALLBACK(style_changed_cb), self);
+    g_signal_connect(G_OBJECT(self->priv->image), "style-updated", G_CALLBACK(style_changed_cb), self);
 
     gtk_widget_show(GTK_WIDGET(self->priv->image));
   }
@@ -574,7 +574,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
  * Called when the theme changes, and reloads the indicator icons.
  **/
 static void 
-style_changed_cb(GtkWidget *widget, GtkStyle *oldstyle, gpointer user_data)
+style_changed_cb(GtkWidget *widget, gpointer user_data)
 {
   g_return_if_fail(GTK_IS_IMAGE(widget));
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
