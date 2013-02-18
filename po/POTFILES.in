@@ -1,3 +1,4 @@
+data/net.launchpad.indicator.notifications.gschema.xml.in.in
 src/dbus-spy.c
 src/indicator-notifications.c
 src/notification.c

@@ -1,0 +1,15 @@
+<schemalist gettext-domain="@GETTEXT_PACKAGE@">
+  <schema id="net.launchpad.indicator.notifications" path="/net/launchpad/indicator/notifications/">
+    <key name="hide-indicator" type="b">
+      <default>false</default>
+      <_summary>Hide the indicator</_summary>
+      <_description>If true, the indicator is hidden.</_description>
+    </key>
+    <key name="max-items" type="i">
+      <range min="1" max="10"/>
+      <default>5</default>
+      <_summary>Maximum number of visible items</_summary>
+      <_description>The indicator will only display at most the number of notifications indicated by this value.</_description>
+    </key>
+  </schema>
+</schemalist>

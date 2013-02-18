@@ -69,6 +69,9 @@ struct _IndicatorNotificationsPrivate {
   GList       *hidden_items;
 
   gboolean     have_unread;
+  gboolean     hide_indicator;
+
+  gint         max_items;
 
   GtkMenu     *menu;
   GtkWidget   *clear_item;
@@ -77,16 +80,16 @@ struct _IndicatorNotificationsPrivate {
   gchar       *accessible_desc;
 
   DBusSpy     *spy;
+
+  GSettings   *settings;
 };
 
 #define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
 
-/**
- * The maximum number of items to show in the indicator at once.
- * FIXME: Store this value in gsettings
- */
-#define INDICATOR_MAX_ITEMS 5
+#define NOTIFICATIONS_SCHEMA             "net.launchpad.indicator.notifications"
+#define NOTIFICATIONS_KEY_HIDE_INDICATOR "hide-indicator"
+#define NOTIFICATIONS_KEY_MAX_ITEMS      "max-items"
 
 #define INDICATOR_ICON_SIZE 22
 #define INDICATOR_ICON_READ   "indicator-notification-read"
@@ -116,12 +119,14 @@ static void       remove_menuitem(IndicatorNotifications *self, GtkWidget *item)
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void       set_unread(IndicatorNotifications *self, gboolean unread);
 static void       update_clear_item_markup(IndicatorNotifications *self);
+static void       update_indicator_visibility(IndicatorNotifications *self);
 
 /* Callbacks */
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static void notification_clicked_cb(NotificationMenuItem *menuitem, gpointer user_data);
+static void setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data);
 static void style_changed_cb(GtkWidget *widget, gpointer user_data);
 
 /* Indicator Module Config */
@@ -188,6 +193,12 @@ indicator_notifications_init(IndicatorNotifications *self)
   /* Watch for notifications from dbus */
   self->priv->spy = dbus_spy_new();
   g_signal_connect(self->priv->spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), self);
+
+  /* Connect to GSettings */
+  self->priv->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
+  self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
+  self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
+  g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 }
 
 static void
@@ -230,6 +241,11 @@ indicator_notifications_dispose(GObject *object)
     self->priv->spy = NULL;
   }
 
+  if(self->priv->settings != NULL) {
+    g_object_unref(G_OBJECT(self->priv->settings));
+    self->priv->settings = NULL;
+  }
+
   G_OBJECT_CLASS (indicator_notifications_parent_class)->dispose (object);
   return;
 }
@@ -267,7 +283,7 @@ get_image(IndicatorObject *io)
 
     g_signal_connect(G_OBJECT(self->priv->image), "style-updated", G_CALLBACK(style_changed_cb), self);
 
-    gtk_widget_show(GTK_WIDGET(self->priv->image));
+    update_indicator_visibility(self);
   }
 
   return self->priv->image;
@@ -347,7 +363,7 @@ insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
   gtk_menu_shell_prepend(GTK_MENU_SHELL(self->priv->menu), item);
 
   /* Move items that overflow to the hidden list */
-  while(g_list_length(self->priv->visible_items) > INDICATOR_MAX_ITEMS) {
+  while(g_list_length(self->priv->visible_items) > self->priv->max_items) {
     last_item = g_list_last(self->priv->visible_items);  
     last_widget = GTK_WIDGET(last_item->data);
     /* Steal the ref from the visible list */
@@ -496,6 +512,26 @@ update_clear_item_markup(IndicatorNotifications *self)
 }
 
 /**
+ * update_indicator_visibility:
+ * @self: the indicator object
+ *
+ * Changes the visibility of the indicator image based on the value
+ * of hide_indicator.
+ **/
+static void
+update_indicator_visibility(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+  
+  if(self->priv->image != NULL) {
+    if(self->priv->hide_indicator)
+      gtk_widget_hide(GTK_WIDGET(self->priv->image));
+    else
+      gtk_widget_show(GTK_WIDGET(self->priv->image));
+  }
+}
+
+/**
  * clear_item_activated_cb:
  * @menuitem: the clear menuitem
  * @user_data: the indicator object
@@ -510,6 +546,28 @@ clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data)
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   clear_menuitems(self);
+}
+
+/**
+ * setting_changed_cb:
+ * @settings: the GSettings object
+ * @key: the GSettings key
+ * @user_data: the indicator object
+ *
+ * Called when a GSettings key is changed.
+ **/
+static void
+setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
+  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
+
+  if(g_strcmp0(key, NOTIFICATIONS_KEY_HIDE_INDICATOR) == 0) {
+    self->priv->hide_indicator = g_settings_get_boolean(settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
+    update_indicator_visibility(self);
+  }
+  /* TODO: Trim or extend the notifications list based on "max-items" key
+   * (Currently requires a restart) */
 }
 
 /**
