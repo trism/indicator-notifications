@@ -31,7 +31,7 @@ static GDBusMessage *message_filter(GDBusConnection *connection, GDBusMessage *m
 
 static gboolean idle_message_emit(gpointer user_data);
 
-#define MATCH_STRING "type='method_call',interface='org.freedesktop.Notifications',member='Notify'"
+#define MATCH_STRING "eavesdrop=true,type='method_call',interface='org.freedesktop.Notifications',member='Notify'"
 
 G_DEFINE_TYPE (DBusSpy, dbus_spy, G_TYPE_OBJECT);
 
