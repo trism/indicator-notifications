@@ -48,11 +48,10 @@ AC_ARG_ENABLE([localinstall],
 
 if test "x$with_localinstall" = "xyes"; then
   INDICATORDIR="${libdir}/indicators/2/"
-  INDICATORICONSDIR="${datadir}/libindicate/icons/"
 else
   INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR3_PKG_NAME`
-  INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR3_PKG_NAME`
 fi
+INDICATORICONSDIR="${datadir}/pixmaps/"
 
 AC_SUBST(INDICATORDIR)
 AC_SUBST(INDICATORICONSDIR)

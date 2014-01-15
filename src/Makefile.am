@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -DICONS_DIR='"$(INDICATORICONSDIR)"'
-
 notificationslibdir = $(INDICATORDIR)
 notificationslib_LTLIBRARIES = libnotifications.la
 libnotifications_la_SOURCES = \

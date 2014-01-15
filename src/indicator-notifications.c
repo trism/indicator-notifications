@@ -62,9 +62,6 @@ struct _IndicatorNotifications {
 struct _IndicatorNotificationsPrivate {
   GtkImage    *image;
 
-  GdkPixbuf   *pixbuf_read;
-  GdkPixbuf   *pixbuf_unread;
-
   GList       *visible_items;
   GList       *hidden_items;
 
@@ -119,7 +116,6 @@ static void         indicator_notifications_middle_click(IndicatorObject *io,
 static void       clear_menuitems(IndicatorNotifications *self);
 static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void       remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
-static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void       set_unread(IndicatorNotifications *self, gboolean unread);
 static void       update_blacklist(IndicatorNotifications *self);
 static void       update_clear_item_markup(IndicatorNotifications *self);
@@ -131,7 +127,6 @@ static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer 
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
 static void notification_clicked_cb(NotificationMenuItem *menuitem, gpointer user_data);
 static void setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data);
-static void style_changed_cb(GtkWidget *widget, gpointer user_data);
 
 /* Indicator Module Config */
 INDICATOR_SET_VERSION
@@ -167,8 +162,6 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->menu = NULL;
 
   self->priv->image = NULL;
-  self->priv->pixbuf_read = NULL;
-  self->priv->pixbuf_unread = NULL;
 
   self->priv->have_unread = FALSE;
 
@@ -219,16 +212,6 @@ indicator_notifications_dispose(GObject *object)
     self->priv->image = NULL;
   }
 
-  if(self->priv->pixbuf_read != NULL) {
-    g_object_unref(G_OBJECT(self->priv->pixbuf_read));
-    self->priv->pixbuf_read = NULL;
-  }
-
-  if(self->priv->pixbuf_unread != NULL) {
-    g_object_unref(G_OBJECT(self->priv->pixbuf_unread));
-    self->priv->pixbuf_unread = NULL;
-  }
-
   if(self->priv->visible_items != NULL) {
     g_list_free_full(self->priv->visible_items, g_object_unref);
     self->priv->visible_items = NULL;
@@ -277,25 +260,7 @@ get_image(IndicatorObject *io)
 
   if(self->priv->image == NULL) {
     self->priv->image = GTK_IMAGE(gtk_image_new());
-
-    self->priv->pixbuf_read = load_icon(INDICATOR_ICON_READ, INDICATOR_ICON_SIZE);
-
-    if(self->priv->pixbuf_read == NULL) {
-      g_error("Failed to load read icon");
-      return NULL;
-    }
-
-    self->priv->pixbuf_unread = load_icon(INDICATOR_ICON_UNREAD, INDICATOR_ICON_SIZE);
-
-    if(self->priv->pixbuf_unread == NULL) {
-      g_error("Failed to load unread icon");
-      return NULL;
-    }
-
-    gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
-
-    g_signal_connect(G_OBJECT(self->priv->image), "style-updated", G_CALLBACK(style_changed_cb), self);
-
+    set_unread(self, FALSE);
     update_indicator_visibility(self);
   }
 
@@ -430,52 +395,6 @@ remove_menuitem(IndicatorNotifications *self, GtkWidget *item)
 }
 
 /**
- * load_icon:
- * @name: the icon name
- * @size: the icon size
- *
- * Tries to load the icon first from the default icon theme, then from an
- * absolute path.
- *
- * Returns: a new gdk pixbuf
- **/
-static GdkPixbuf *
-load_icon(const gchar *name, gint size)
-{
-  g_return_val_if_fail(name != NULL, NULL);
-  g_return_val_if_fail(size > 0, NULL);
-  GError *error = NULL;
-  GdkPixbuf *pixbuf = NULL;
-
-  /* First try to load the icon from the icon theme */
-  GtkIconTheme *theme = gtk_icon_theme_get_default();
-
-  if(gtk_icon_theme_has_icon(theme, name)) {
-    pixbuf = gtk_icon_theme_load_icon(theme, name, size, GTK_ICON_LOOKUP_FORCE_SVG, &error);
-
-    if(error != NULL) {
-      g_warning("Failed to load icon '%s' from icon theme: %s", name, error->message);
-    }
-    else {
-      return pixbuf;
-    }
-  }
-
-  /* Otherwise load from the icon installation path */
-  gchar *path = g_strdup_printf(ICONS_DIR "/hicolor/scalable/status/%s.svg", name);
-  pixbuf = gdk_pixbuf_new_from_file_at_scale(path, size, size, FALSE, &error);
-
-  if(error != NULL) {
-    g_warning("Failed to load icon at '%s': %s", path, error->message);
-    pixbuf = NULL;
-  }
-
-  g_free(path);
-
-  return pixbuf;
-}
-
-/**
  * set_unread:
  * @self: the indicator object
  * @unread: the unread status
@@ -488,12 +407,10 @@ set_unread(IndicatorNotifications *self, gboolean unread)
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
 
   if(unread) {
-    if(self->priv->pixbuf_unread != NULL)
-      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_unread);
+    gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_UNREAD, GTK_ICON_SIZE_MENU);
   }
   else {
-    if(self->priv->pixbuf_read != NULL)
-      gtk_image_set_from_pixbuf(self->priv->image, self->priv->pixbuf_read);
+    gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_READ, GTK_ICON_SIZE_MENU);
   }
 
   self->priv->have_unread = unread;
@@ -670,50 +587,6 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   insert_menuitem(self, item);
 
   set_unread(self, TRUE);
-}
-
-/**
- * style_changed_cb:
- * @widget: the indicator image
- * @oldstyle: unused
- * @user_data: the indicator object
- *
- * Called when the theme changes, and reloads the indicator icons.
- **/
-static void 
-style_changed_cb(GtkWidget *widget, gpointer user_data)
-{
-  g_return_if_fail(GTK_IS_IMAGE(widget));
-  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
-  IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
-  GdkPixbuf *pixbuf_read = NULL, *pixbuf_unread = NULL;
-
-  /* Attempt to load the new pixbufs, but keep the ones we have if this fails */
-  pixbuf_read = load_icon(INDICATOR_ICON_READ, INDICATOR_ICON_SIZE);
-  if(pixbuf_read != NULL) {
-    g_object_unref(self->priv->pixbuf_read);
-    self->priv->pixbuf_read = pixbuf_read;
-
-    if(!self->priv->have_unread) {
-      gtk_image_set_from_pixbuf(self->priv->image, pixbuf_read);
-    }
-  }
-  else {
-    g_warning("Failed to update read icon to new theme");
-  }
-
-  pixbuf_unread = load_icon(INDICATOR_ICON_UNREAD, INDICATOR_ICON_SIZE);
-  if(pixbuf_unread != NULL) {
-    g_object_unref(self->priv->pixbuf_unread);
-    self->priv->pixbuf_unread = pixbuf_unread;
-
-    if(self->priv->have_unread) {
-      gtk_image_set_from_pixbuf(self->priv->image, pixbuf_unread);
-    }
-  }
-  else {
-    g_warning("Failed to update unread icon to new theme");
-  }
 }
 
 /**
