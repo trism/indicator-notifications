@@ -1,5 +1,10 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
   <schema id="net.launchpad.indicator.notifications" path="/net/launchpad/indicator/notifications/">
+    <key name="blacklist" type="as">
+      <default>[]</default>
+      <_summary>Discard notifications by application name</_summary>
+      <_description>If an application name is in the blacklist, all notifications matching the application name will be discarded.</_description>
+    </key>
     <key name="hide-indicator" type="b">
       <default>false</default>
       <_summary>Hide the indicator</_summary>

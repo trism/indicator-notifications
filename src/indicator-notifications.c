@@ -81,6 +81,8 @@ struct _IndicatorNotificationsPrivate {
 
   DBusSpy     *spy;
 
+  GHashTable  *blacklist;
+
   GSettings   *settings;
 };
 
@@ -88,6 +90,7 @@ struct _IndicatorNotificationsPrivate {
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
 
 #define NOTIFICATIONS_SCHEMA             "net.launchpad.indicator.notifications"
+#define NOTIFICATIONS_KEY_BLACKLIST      "blacklist"
 #define NOTIFICATIONS_KEY_HIDE_INDICATOR "hide-indicator"
 #define NOTIFICATIONS_KEY_MAX_ITEMS      "max-items"
 
@@ -118,6 +121,7 @@ static void       insert_menuitem(IndicatorNotifications *self, GtkWidget *item)
 static void       remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static GdkPixbuf *load_icon(const gchar *name, gint size);
 static void       set_unread(IndicatorNotifications *self, gboolean unread);
+static void       update_blacklist(IndicatorNotifications *self);
 static void       update_clear_item_markup(IndicatorNotifications *self);
 static void       update_indicator_visibility(IndicatorNotifications *self);
 
@@ -194,10 +198,14 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->spy = dbus_spy_new();
   g_signal_connect(self->priv->spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), self);
 
+  /* Initialize an empty blacklist */
+  self->priv->blacklist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
   /* Connect to GSettings */
   self->priv->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
+  update_blacklist(self);
   g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 }
 
@@ -244,6 +252,11 @@ indicator_notifications_dispose(GObject *object)
   if(self->priv->settings != NULL) {
     g_object_unref(G_OBJECT(self->priv->settings));
     self->priv->settings = NULL;
+  }
+
+  if(self->priv->blacklist != NULL) {
+    g_hash_table_unref(self->priv->blacklist);
+    self->priv->blacklist = NULL;
   }
 
   G_OBJECT_CLASS (indicator_notifications_parent_class)->dispose (object);
@@ -487,6 +500,30 @@ set_unread(IndicatorNotifications *self, gboolean unread)
 }
 
 /**
+ * update_blacklist:
+ * @self: the indicator object
+ *
+ * Updates the blacklist from GSettings. This currently does not filter already
+ * allowed messages. It only applies to messages received in the future.
+ **/
+static void
+update_blacklist(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+  g_return_if_fail(self->priv->blacklist != NULL);
+
+  g_hash_table_remove_all(self->priv->blacklist);
+  gchar **items = g_settings_get_strv(self->priv->settings, NOTIFICATIONS_KEY_BLACKLIST);
+  int i;
+
+  for(i = 0; items[i] != NULL; i++) {
+    g_hash_table_insert(self->priv->blacklist, g_strdup(items[i]), NULL);
+  }
+
+  g_strfreev(items);
+}
+
+/**
  * update_clear_item_markup:
  * @self: the indicator object
  *
@@ -566,6 +603,9 @@ setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
     self->priv->hide_indicator = g_settings_get_boolean(settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
     update_indicator_visibility(self);
   }
+  else if(g_strcmp0(key, NOTIFICATIONS_KEY_BLACKLIST) == 0) {
+    update_blacklist(self);
+  }
   /* TODO: Trim or extend the notifications list based on "max-items" key
    * (Currently requires a restart) */
 }
@@ -609,8 +649,17 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
   /* Discard useless notifications */
-  if(notification_is_private(note) || notification_is_empty(note))
+  if(notification_is_private(note) || notification_is_empty(note)) {
+    g_object_unref(note);
     return;
+  }
+
+  /* Discard notifications on the blacklist */
+  if(self->priv->blacklist != NULL && g_hash_table_contains(self->priv->blacklist,
+        notification_get_app_name(note))) {
+    g_object_unref(note);
+    return;
+  }
 
   GtkWidget *item = notification_menuitem_new();
   notification_menuitem_set_from_notification(NOTIFICATION_MENUITEM(item), note);
