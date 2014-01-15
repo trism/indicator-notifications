@@ -1,4 +1,4 @@
-AC_INIT([indicator-notifications], [0.2.5], [jason.conti@gmail.com])
+AC_INIT([indicator-notifications], [0.2.6], [jason.conti@gmail.com])
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
 
