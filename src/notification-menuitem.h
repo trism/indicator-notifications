@@ -30,7 +30,7 @@ struct _NotificationMenuItemClass
 {
   GtkMenuItemClass parent_class;
 
-  void (* clicked) (NotificationMenuItem *menuitem);
+  void (* clicked) (NotificationMenuItem *menuitem, guint button);
 };
 
 struct _NotificationMenuItemPrivate {

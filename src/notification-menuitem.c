@@ -42,8 +42,8 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(NotificationMenuItemClass, clicked),
                  NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
+                 g_cclosure_marshal_VOID__UINT,
+                 G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
@@ -63,7 +63,7 @@ notification_menuitem_init(NotificationMenuItem *self)
   gtk_box_pack_start(GTK_BOX(hbox), self->priv->label, TRUE, TRUE, 0);
   gtk_widget_show(self->priv->label);
 
-  self->priv->close_image = gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+  self->priv->close_image = gtk_image_new_from_icon_name("gtk-close", GTK_ICON_SIZE_MENU);
   gtk_widget_show(self->priv->close_image);
   gtk_box_pack_start(GTK_BOX(hbox), self->priv->close_image, FALSE, FALSE, 0);
 
@@ -151,6 +151,6 @@ notification_button_release_cb(GtkWidget *widget, GdkEventButton *event, gpointe
 {
   g_return_val_if_fail(IS_NOTIFICATION_MENUITEM(widget), FALSE);
 
-  g_signal_emit(NOTIFICATION_MENUITEM(widget), notification_menuitem_signals[CLICKED], 0);
+  g_signal_emit(NOTIFICATION_MENUITEM(widget), notification_menuitem_signals[CLICKED], 0, event->button);
   return TRUE;
 }

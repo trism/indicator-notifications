@@ -125,7 +125,7 @@ static void       update_indicator_visibility(IndicatorNotifications *self);
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
 static void menu_visible_notify_cb(GtkWidget *menu, GParamSpec *pspec, gpointer user_data);
 static void message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data);
-static void notification_clicked_cb(NotificationMenuItem *menuitem, gpointer user_data);
+static void notification_clicked_cb(NotificationMenuItem *menuitem, guint button, gpointer user_data);
 static void setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data);
 
 /* Indicator Module Config */
@@ -597,7 +597,7 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
  * Remove the menuitem when clicked.
  **/
 static void
-notification_clicked_cb(NotificationMenuItem *menuitem, gpointer user_data)
+notification_clicked_cb(NotificationMenuItem *menuitem, guint button, gpointer user_data)
 {
   g_return_if_fail(IS_NOTIFICATION_MENUITEM(menuitem));
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
