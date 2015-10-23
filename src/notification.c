@@ -106,17 +106,20 @@ notification_new_from_dbus_message(GDBusMessage *message)
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_STRING));
   self->priv->app_name = g_variant_dup_string(child, 
       &(self->priv->app_name_length));
+  g_variant_unref(child);
 
   /* replaces_id */
   child = g_variant_get_child_value(body, COLUMN_REPLACES_ID);
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_UINT32));
   self->priv->replaces_id = g_variant_get_uint32(child);
+  g_variant_unref(child);
 
   /* app_icon */
   child = g_variant_get_child_value(body, COLUMN_APP_ICON);
   g_assert(g_variant_is_of_type(child, G_VARIANT_TYPE_STRING));
   self->priv->app_icon = g_variant_dup_string(child,
       &(self->priv->app_icon_length));
+  g_variant_unref(child);
 
   /* summary */
   child = g_variant_get_child_value(body, COLUMN_SUMMARY);
@@ -125,6 +128,7 @@ notification_new_from_dbus_message(GDBusMessage *message)
       &(self->priv->summary_length));
   g_strstrip(self->priv->summary);
   self->priv->summary_length = strlen(self->priv->summary);
+  g_variant_unref(child);
 
   /* body */
   child = g_variant_get_child_value(body, COLUMN_BODY);
@@ -133,6 +137,7 @@ notification_new_from_dbus_message(GDBusMessage *message)
       &(self->priv->body_length));
   g_strstrip(self->priv->body);
   self->priv->body_length = strlen(self->priv->body);
+  g_variant_unref(child);
 
   /* hints */
   child = g_variant_get_child_value(body, COLUMN_HINTS);
@@ -142,6 +147,8 @@ notification_new_from_dbus_message(GDBusMessage *message)
   value = g_variant_lookup_value(child, X_CANONICAL_PRIVATE_SYNCHRONOUS, G_VARIANT_TYPE_STRING);
   if(value != NULL) {
     const gchar *private_string = g_variant_get_string(value, NULL);
+    g_variant_unref(value);
+    value = NULL;
 
     if((g_strcmp0(private_string, "volume") == 0) ||
        (g_strcmp0(private_string, "brightness") == 0) ||
@@ -150,6 +157,7 @@ notification_new_from_dbus_message(GDBusMessage *message)
     }
   }
 
+  g_variant_unref(child);
   child = NULL;
 
   return self;
