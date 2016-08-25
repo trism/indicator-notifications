@@ -34,8 +34,9 @@ struct _NotificationMenuItemClass
 };
 
 struct _NotificationMenuItemPrivate {
-  GtkWidget *label;
   GtkWidget *close_image;
+  GtkWidget *hbox;
+  GtkWidget *label;
 };
 
 #define NOTIFICATION_MENUITEM_GET_PRIVATE(o) \
