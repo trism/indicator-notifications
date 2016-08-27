@@ -49,6 +49,7 @@ static char *urlregex_expand(GMatchInfo *match_info, UrlRegexFlavor flavor);
  * urlregex_init:
  *
  * Compiles all of the url matching regular expressions.
+ * FIXME: Return immediately or error if initialized more than once
  **/
 void
 urlregex_init(void)

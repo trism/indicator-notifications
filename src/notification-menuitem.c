@@ -8,6 +8,7 @@
 
 #include <glib/gi18n-lib.h>
 #include "notification-menuitem.h"
+#include "urlregex.h"
 
 #define NOTIFICATION_MENUITEM_MAX_CHARS 42
 
@@ -28,6 +29,7 @@ static void     notification_menuitem_select(GtkMenuItem *item);
 static void     notification_menuitem_deselect(GtkMenuItem *item);
 
 static gboolean notification_menuitem_activate_link_cb(GtkLabel *label, gchar *uri, gpointer user_data);
+static gchar   *notification_menuitem_markup_body(const gchar *body);
 
 static gboolean widget_contains_event(GtkWidget *widget, GdkEventButton *event);
 
@@ -51,6 +53,9 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
   menu_item_class->activate = notification_menuitem_activate;
   menu_item_class->select = notification_menuitem_select;
   menu_item_class->deselect = notification_menuitem_deselect;
+
+  /* Compile the urlregex patterns */
+  urlregex_init();
 
   notification_menuitem_signals[CLICKED] =
     g_signal_new(NOTIFICATION_MENUITEM_SIGNAL_CLICKED,
@@ -104,10 +109,10 @@ notification_menuitem_set_from_notification(NotificationMenuItem *self, Notifica
 
   gchar *app_name = g_markup_escape_text(notification_get_app_name(note), -1);
   gchar *summary = g_markup_escape_text(notification_get_summary(note), -1);
-  gchar *body = g_markup_escape_text(notification_get_body(note), -1);
+  gchar *body = notification_menuitem_markup_body(notification_get_body(note));
   gchar *timestamp_string = g_markup_escape_text(unescaped_timestamp_string, -1);
 
-  gchar *markup = g_strdup_printf("<b>%s</b>\n%s\n<a href=\"http://www.google.com/\">Google</a> <a href=\"http://www.yahoo.com/\">Yahoo</a> \n<small><i>%s %s <b>%s</b></i></small>",
+  gchar *markup = g_strdup_printf("<b>%s</b>\n%s\n<small><i>%s %s <b>%s</b></i></small>",
       summary, body, timestamp_string, _("from"), app_name);
 
   g_free(app_name);
@@ -201,8 +206,6 @@ notification_menuitem_button_press(GtkWidget *widget, GdkEventButton *event)
  *
  * Override the menuitem button-release-event so that the menu isn't hidden when the
  * item is removed.
- *
- * FIXME: Only remove the item when the close image is clicked.
  **/
 static gboolean
 notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
@@ -226,6 +229,7 @@ notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
 static void
 notification_menuitem_select(GtkMenuItem *menuitem)
 {
+  /* FIXME: breaks keyboard navigation */
 }
 
 static void
@@ -256,6 +260,31 @@ notification_menuitem_activate_link_cb(GtkLabel *label, gchar *uri, gpointer use
   }
 
   return TRUE;
+}
+
+static gchar *
+notification_menuitem_markup_body(const gchar *body)
+{
+  GList *list = urlregex_split_all(body);
+  guint len = g_list_length(list);
+  gchar **str_array = g_new0(gchar *, len + 1);
+  guint i = 0;
+  GList *item;
+
+  for (item = list; item; item = item->next, i++) {
+    MatchGroup *group = (MatchGroup *)item->data;
+    if (group->type == MATCHED) {
+      str_array[i] = g_strdup_printf("<a href=\"%s\">%s</a>", group->expanded, group->text);
+    }
+    else {
+      str_array[i] = g_markup_escape_text(group->text, -1);
+    }
+  }
+
+  urlregex_matchgroup_list_free(list);
+  gchar *result = g_strjoinv(NULL, str_array);
+  g_strfreev(str_array);
+  return result;
 }
 
 static gboolean
