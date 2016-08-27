@@ -124,7 +124,6 @@ notification_menuitem_set_from_notification(NotificationMenuItem *self, Notifica
 /**
  * notification_menuitem_activate:
  * @menuitem: the menuitem
- * @user_data: not used
  *
  * Emit a clicked event for the case where a keyboard activates a menuitem.
  **/

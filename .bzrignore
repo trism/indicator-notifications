@@ -53,3 +53,5 @@ src/libnotifications_la-notification-menuitem.lo
 data/net.launchpad.indicator.notifications.gschema.valid
 data/net.launchpad.indicator.notifications.gschema.xml
 data/net.launchpad.indicator.notifications.gschema.xml.in
+src/libnotifications_la-urlregex.lo
+ar-lib

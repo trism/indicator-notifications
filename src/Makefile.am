@@ -3,6 +3,8 @@ notificationslib_LTLIBRARIES = libnotifications.la
 libnotifications_la_SOURCES = \
 	dbus-spy.c \
 	dbus-spy.h \
+	urlregex.c \
+	urlregex.h \
 	notification-menuitem.c \
 	notification-menuitem.h \
 	indicator-notifications.c \

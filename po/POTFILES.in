@@ -3,3 +3,4 @@ src/dbus-spy.c
 src/indicator-notifications.c
 src/notification.c
 src/notification-menuitem.c
+src/urlregex.c
