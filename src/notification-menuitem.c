@@ -11,6 +11,8 @@
 #include "urlregex.h"
 
 #define NOTIFICATION_MENUITEM_MAX_CHARS 42
+#define NOTIFICATION_MENUITEM_CLOSE_SELECT "indicator-notification-close-select"
+#define NOTIFICATION_MENUITEM_CLOSE_DESELECT "indicator-notification-close-deselect"
 
 enum {
   CLICKED,
@@ -50,6 +52,7 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
 
   g_type_class_add_private(klass, sizeof(NotificationMenuItemPrivate));
 
+  menu_item_class->hide_on_activate = FALSE;
   menu_item_class->activate = notification_menuitem_activate;
   menu_item_class->select = notification_menuitem_select;
   menu_item_class->deselect = notification_menuitem_deselect;
@@ -87,7 +90,7 @@ notification_menuitem_init(NotificationMenuItem *self)
   gtk_box_pack_start(GTK_BOX(self->priv->hbox), self->priv->label, TRUE, TRUE, 0);
   gtk_widget_show(self->priv->label);
 
-  self->priv->close_image = gtk_image_new_from_icon_name("gtk-close", GTK_ICON_SIZE_MENU);
+  self->priv->close_image = gtk_image_new_from_icon_name(NOTIFICATION_MENUITEM_CLOSE_DESELECT, GTK_ICON_SIZE_MENU);
   gtk_widget_show(self->priv->close_image);
   gtk_box_pack_start(GTK_BOX(self->priv->hbox), self->priv->close_image, FALSE, FALSE, 0);
 
@@ -229,12 +232,25 @@ notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
 static void
 notification_menuitem_select(GtkMenuItem *menuitem)
 {
-  /* FIXME: breaks keyboard navigation */
+  g_return_if_fail(IS_NOTIFICATION_MENUITEM(menuitem));
+
+  NotificationMenuItem *self = NOTIFICATION_MENUITEM(menuitem);
+
+  gtk_image_set_from_icon_name(GTK_IMAGE(self->priv->close_image),
+      NOTIFICATION_MENUITEM_CLOSE_SELECT,
+      GTK_ICON_SIZE_MENU);
 }
 
 static void
 notification_menuitem_deselect(GtkMenuItem *menuitem)
 {
+  g_return_if_fail(IS_NOTIFICATION_MENUITEM(menuitem));
+
+  NotificationMenuItem *self = NOTIFICATION_MENUITEM(menuitem);
+
+  gtk_image_set_from_icon_name(GTK_IMAGE(self->priv->close_image),
+      NOTIFICATION_MENUITEM_CLOSE_DESELECT,
+      GTK_ICON_SIZE_MENU);
 }
 
 static gboolean
