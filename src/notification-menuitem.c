@@ -75,6 +75,8 @@ notification_menuitem_init(NotificationMenuItem *self)
 {
   self->priv = NOTIFICATION_MENUITEM_GET_PRIVATE(self);
 
+  self->priv->pressed_close_image = FALSE;
+
   self->priv->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
   self->priv->label = gtk_label_new(NULL);
@@ -193,11 +195,13 @@ notification_menuitem_button_press(GtkWidget *widget, GdkEventButton *event)
   g_return_val_if_fail(IS_NOTIFICATION_MENUITEM(widget), FALSE);
 
   NotificationMenuItem *self = NOTIFICATION_MENUITEM(widget);
-  GtkWidget *label = self->priv->label;
 
   /* The context menu breaks everything so disable it for now */
-  if (event->button == GDK_BUTTON_PRIMARY && widget_contains_event(label, event)) {
-    gtk_widget_event(label, (GdkEvent *)event);
+  if (event->button == GDK_BUTTON_PRIMARY && widget_contains_event(self->priv->label, event)) {
+    gtk_widget_event(self->priv->label, (GdkEvent *)event);
+  }
+  else if (widget_contains_event(self->priv->close_image, event)) {
+    self->priv->pressed_close_image = TRUE;
   }
   return TRUE;
 }
@@ -218,7 +222,8 @@ notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
   NotificationMenuItem *self = NOTIFICATION_MENUITEM(widget);
 
   if (widget_contains_event(self->priv->close_image, event)) {
-    g_signal_emit(NOTIFICATION_MENUITEM(widget), notification_menuitem_signals[CLICKED], 0, event->button);
+    if (self->priv->pressed_close_image)
+      g_signal_emit(NOTIFICATION_MENUITEM(widget), notification_menuitem_signals[CLICKED], 0, event->button);
   }
   else {
     /* The context menu breaks everything so disable it for now */
@@ -226,6 +231,7 @@ notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
       gtk_widget_event(self->priv->label, (GdkEvent *)event);
     }
   }
+  self->priv->pressed_close_image = FALSE;
   return TRUE;
 }
 

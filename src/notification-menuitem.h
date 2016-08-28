@@ -37,6 +37,8 @@ struct _NotificationMenuItemPrivate {
   GtkWidget *close_image;
   GtkWidget *hbox;
   GtkWidget *label;
+
+  gboolean pressed_close_image;
 };
 
 #define NOTIFICATION_MENUITEM_GET_PRIVATE(o) \
