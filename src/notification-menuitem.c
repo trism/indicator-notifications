@@ -350,11 +350,17 @@ notification_menuitem_markup_body(const gchar *body)
   gchar **str_array = g_new0(gchar *, len + 1);
   guint i = 0;
   GList *item;
+  gchar *escaped_text;
+  gchar *escaped_expanded;
 
   for (item = list; item; item = item->next, i++) {
     MatchGroup *group = (MatchGroup *)item->data;
     if (group->type == MATCHED) {
-      str_array[i] = g_strdup_printf("<a href=\"%s\">%s</a>", group->expanded, group->text);
+      escaped_text = g_markup_escape_text(group->text, -1);
+      escaped_expanded = g_markup_escape_text(group->expanded, -1);
+      str_array[i] = g_strdup_printf("<a href=\"%s\">%s</a>", escaped_expanded, escaped_text);
+      g_free(escaped_text);
+      g_free(escaped_expanded);
     }
     else {
       str_array[i] = g_markup_escape_text(group->text, -1);
