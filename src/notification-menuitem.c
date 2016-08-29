@@ -106,6 +106,14 @@ notification_menuitem_new(void)
   return g_object_new(NOTIFICATION_MENUITEM_TYPE, NULL);
 }
 
+/**
+ * notification_menuitem_set_from_notification:
+ * @self - the notification menuitem
+ * @note - the notification object
+ *
+ * Sets the markup in the notification menuitem to display information about
+ * the notification, as well as marking any links within the message body.
+ **/
 void
 notification_menuitem_set_from_notification(NotificationMenuItem *self, Notification *note)
 {
@@ -145,6 +153,14 @@ notification_menuitem_activate(GtkMenuItem *menuitem)
   g_signal_emit(NOTIFICATION_MENUITEM(menuitem), notification_menuitem_signals[CLICKED], 0);
 }
 
+/**
+ * notification_menuitem_leave:
+ * @widget - the widget
+ * @event - the event
+ *
+ * Handle the leave-notify-event, by simply passing it on to the GtkLabel of
+ * this menuitem.
+ **/
 static gboolean
 notification_menuitem_leave(GtkWidget *widget, GdkEventCrossing *event)
 {
@@ -156,6 +172,15 @@ notification_menuitem_leave(GtkWidget *widget, GdkEventCrossing *event)
   return FALSE;
 }
 
+/**
+ * notification_menuitem_motion:
+ * @widget - the widget
+ * @event - the event
+ *
+ * Handle the motion-notify-event. It is passed on to the GtkLabel, but the
+ * event (x, y) is mapped to the whole menuitem not the label so we have to
+ * shift it over a bit into the label's allocation.
+ **/
 static gboolean
 notification_menuitem_motion(GtkWidget *widget, GdkEventMotion *event)
 {
@@ -211,8 +236,9 @@ notification_menuitem_button_press(GtkWidget *widget, GdkEventButton *event)
  * @widget: the menuitem
  * @event: the button release event
  *
- * Override the menuitem button-release-event so that the menu isn't hidden when the
- * item is removed.
+ * Override the menuitem button-release-event so that the menu isn't hidden
+ * when the item is removed. Also the event is passed on to the label so we can
+ * get an activate-link signal when a link is clicked.
  **/
 static gboolean
 notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
@@ -235,6 +261,15 @@ notification_menuitem_button_release(GtkWidget *widget, GdkEventButton *event)
   return TRUE;
 }
 
+/**
+ * notification_menuitem_select:
+ * @menuitem - the menuitem
+ *
+ * Handle the menuitem select signal. We don't want to set PRELIGHT on the
+ * menuitem because in various themes it becomes very hard to see the links.
+ * Instead we set a special close image to show that the notification is
+ * selected for keyboard navigation.
+ **/
 static void
 notification_menuitem_select(GtkMenuItem *menuitem)
 {
@@ -247,6 +282,12 @@ notification_menuitem_select(GtkMenuItem *menuitem)
       GTK_ICON_SIZE_MENU);
 }
 
+/**
+ * notification_menuitem_deselect:
+ * @menuitem - the menuitem
+ *
+ * Same as notification_menuitem_select, but sets the opposite close image.
+ **/
 static void
 notification_menuitem_deselect(GtkMenuItem *menuitem)
 {
@@ -259,6 +300,16 @@ notification_menuitem_deselect(GtkMenuItem *menuitem)
       GTK_ICON_SIZE_MENU);
 }
 
+/**
+ * notification_menuitem_activate_link_cb:
+ * @label - the label
+ * @uri - the link that was activated
+ * @user_data - the notification menuitem
+ *
+ * We override the activate-link signal of the GtkLabel because we need to
+ * deactivate the menu shell when it is clicked, otherwise it stays stuck to
+ * the screen as the browser loads.
+ **/
 static gboolean
 notification_menuitem_activate_link_cb(GtkLabel *label, gchar *uri, gpointer user_data)
 {
@@ -284,6 +335,13 @@ notification_menuitem_activate_link_cb(GtkLabel *label, gchar *uri, gpointer use
   return TRUE;
 }
 
+/**
+ * notification_menuitem_markup_body:
+ * @body - the body of a notification
+ *
+ * Scans through the body text escaping everything that isn't a link. The links
+ * are marked up as anchors with hrefs.
+ **/
 static gchar *
 notification_menuitem_markup_body(const gchar *body)
 {
@@ -309,6 +367,14 @@ notification_menuitem_markup_body(const gchar *body)
   return result;
 }
 
+/**
+ * widget_contains_event:
+ * @widget - the widget
+ * @event - the event
+ *
+ * Determines whether the (x, y) coordinates of the event fall inside the
+ * widget.
+ **/
 static gboolean
 widget_contains_event(GtkWidget *widget, GdkEventButton *event)
 {
