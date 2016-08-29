@@ -463,6 +463,10 @@ update_clear_item_markup(IndicatorNotifications *self)
 
   gtk_label_set_markup(GTK_LABEL(self->priv->clear_item_label), markup);
   g_free(markup);
+
+  if (total_length == 0) {
+    gtk_menu_shell_deactivate(GTK_MENU_SHELL(self->priv->menu));
+  }
 }
 
 /**
