@@ -65,6 +65,7 @@ struct _IndicatorNotificationsPrivate {
   GList       *visible_items;
   GList       *hidden_items;
 
+  gboolean     clear_on_middle_click;
   gboolean     have_unread;
   gboolean     hide_indicator;
 
@@ -88,6 +89,7 @@ struct _IndicatorNotificationsPrivate {
 
 #define NOTIFICATIONS_SCHEMA             "net.launchpad.indicator.notifications"
 #define NOTIFICATIONS_KEY_BLACKLIST      "blacklist"
+#define NOTIFICATIONS_KEY_CLEAR_MC       "clear-on-middle-click"
 #define NOTIFICATIONS_KEY_HIDE_INDICATOR "hide-indicator"
 #define NOTIFICATIONS_KEY_MAX_ITEMS      "max-items"
 
@@ -196,6 +198,7 @@ indicator_notifications_init(IndicatorNotifications *self)
 
   /* Connect to GSettings */
   self->priv->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
+  self->priv->clear_on_middle_click = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_CLEAR_MC);
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
   update_blacklist(self);
@@ -289,8 +292,16 @@ indicator_notifications_middle_click(IndicatorObject *io, IndicatorObjectEntry *
 {
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(io);
 
-  if(g_list_length(self->priv->visible_items) > 0)
-    set_unread(self, !self->priv->have_unread);
+  /* Clear the notifications */
+  if(self->priv->clear_on_middle_click) {
+    clear_menuitems(self);
+    set_unread(self, FALSE);
+  }
+  /* Otherwise toggle unread status */
+  else {
+    if(g_list_length(self->priv->visible_items) > 0)
+      set_unread(self, !self->priv->have_unread);
+  }
 }
 
 /**
@@ -523,6 +534,9 @@ setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
   if(g_strcmp0(key, NOTIFICATIONS_KEY_HIDE_INDICATOR) == 0) {
     self->priv->hide_indicator = g_settings_get_boolean(settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
     update_indicator_visibility(self);
+  }
+  else if(g_strcmp0(key, NOTIFICATIONS_KEY_CLEAR_MC) == 0) {
+    self->priv->clear_on_middle_click = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_CLEAR_MC);
   }
   else if(g_strcmp0(key, NOTIFICATIONS_KEY_BLACKLIST) == 0) {
     update_blacklist(self);
