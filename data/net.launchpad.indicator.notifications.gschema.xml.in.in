@@ -2,24 +2,24 @@
   <schema id="net.launchpad.indicator.notifications" path="/net/launchpad/indicator/notifications/">
     <key name="blacklist" type="as">
       <default>[]</default>
-      <_summary>Discard notifications by application name</_summary>
-      <_description>If an application name is in the blacklist, all notifications matching the application name will be discarded.</_description>
+      <summary>Discard notifications by application name</summary>
+      <description>If an application name is in the blacklist, all notifications matching the application name will be discarded.</description>
     </key>
     <key name="clear-on-middle-click" type="b">
       <default>false</default>
-      <_summary>Clear notifications on middle click</_summary>
-      <_description>Normally when middle clicking the notification icon, the unread status will be toggled if the queue is not empty. With this option enabled, the notification queue will be cleared instead.</_description>
+      <summary>Clear notifications on middle click</summary>
+      <description>Normally when middle clicking the notification icon, the unread status will be toggled if the queue is not empty. With this option enabled, the notification queue will be cleared instead.</description>
     </key>
     <key name="hide-indicator" type="b">
       <default>false</default>
-      <_summary>Hide the indicator</_summary>
-      <_description>If true, the indicator is hidden.</_description>
+      <summary>Hide the indicator</summary>
+      <description>If true, the indicator is hidden.</description>
     </key>
     <key name="max-items" type="i">
       <range min="1" max="10"/>
       <default>5</default>
-      <_summary>Maximum number of visible items</_summary>
-      <_description>The indicator will only display at most the number of notifications indicated by this value.</_description>
+      <summary>Maximum number of visible items</summary>
+      <description>The indicator will only display at most the number of notifications indicated by this value.</description>
     </key>
   </schema>
 </schemalist>

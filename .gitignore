@@ -20,6 +20,15 @@ po/Makefile.in
 po/Makefile.in.in
 po/POTFILES
 po/stamp-it
+po/Makevars.template
+po/Rules-quot
+po/boldquot.sed
+po/en@boldquot.header
+po/en@quot.header
+po/insert-header.sin
+po/quot.sed
+po/remove-potcdate.sin
+po/stamp-po
 src/.deps
 src/.libs
 src/Makefile
@@ -38,6 +47,8 @@ aclocal.m4
 autom4te.cache
 compile
 config.guess
+config.h.in~
+config.rpath
 tags
 data/indicator-notifications.service
 src/indicator-notifications-service
@@ -49,9 +60,11 @@ src/libnotifications_la-dbus-spy.lo
 src/libnotifications_la-notification.lo
 src/libnotifications_la-notification-menu.lo
 *.tar.gz
+*.swp
 src/libnotifications_la-notification-menuitem.lo
 data/net.launchpad.indicator.notifications.gschema.valid
 data/net.launchpad.indicator.notifications.gschema.xml
 data/net.launchpad.indicator.notifications.gschema.xml.in
 src/libnotifications_la-urlregex.lo
 ar-lib
+ABOUT-NLS

@@ -1,5 +1,7 @@
 AC_INIT([indicator-notifications], [0.3.3], [jason.conti@gmail.com])
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AM_INIT_AUTOMAKE([-Wall -Werror])
 
 AM_SILENT_RULES([yes])
@@ -14,9 +16,10 @@ AC_STDC_HEADERS
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-# Setup gettext with intltool
+# Setup gettext
 
-IT_PROG_INTLTOOL
+AM_GNU_GETTEXT_VERSION([0.19])
+AM_GNU_GETTEXT([external])
 GETTEXT_PACKAGE=$PACKAGE
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext package])
 AC_SUBST(GETTEXT_PACKAGE)
