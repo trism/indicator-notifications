@@ -15,6 +15,7 @@ libnotifications_la_SOURCES = \
 	notification.h
 
 libnotifications_la_CFLAGS = \
+	-DSETTINGS_PATH=\""$(libexecdir)/indicator-notifications-settings"\" \
 	$(INDICATOR_CFLAGS) \
 	-Wall \
 	-DG_LOG_DOMAIN=\"Indicator-Notifications\"

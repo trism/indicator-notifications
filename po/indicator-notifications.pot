@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: indicator-notifications 0.3.3\n"
 "Report-Msgid-Bugs-To: jason.conti@gmail.com\n"
-"POT-Creation-Date: 2019-06-07 16:51-0400\n"
+"POT-Creation-Date: 2019-06-07 18:30-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: data/net.launchpad.indicator.notifications.gschema.xml.in.in:5
-#: src/indicator-notifications-settings.c:267
+#: src/indicator-notifications-settings.c:274
 msgid "Discard notifications by application name"
 msgstr ""
 
@@ -29,7 +29,7 @@ msgid ""
 msgstr ""
 
 #: data/net.launchpad.indicator.notifications.gschema.xml.in.in:10
-#: src/indicator-notifications-settings.c:237
+#: src/indicator-notifications-settings.c:244
 msgid "Clear notifications on middle click"
 msgstr ""
 
@@ -58,36 +58,40 @@ msgid ""
 "indicated by this value."
 msgstr ""
 
-#: src/indicator-notifications.c:161
+#: src/indicator-notifications.c:163
 msgid "Notifications"
 msgstr ""
 
-#: src/indicator-notifications.c:461
+#: src/indicator-notifications.c:172
+msgid "Settings..."
+msgstr ""
+
+#: src/indicator-notifications.c:470
 #, c-format
 msgid "Clear <small>(%d Notification)</small>"
 msgid_plural "Clear <small>(%d Notifications)</small>"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/indicator-notifications-settings.c:220
-#: src/indicator-notifications-settings.c:226
-#: src/indicator-notifications-settings.c:341
+#: src/indicator-notifications-settings.c:227
+#: src/indicator-notifications-settings.c:233
+#: src/indicator-notifications-settings.c:348
 msgid "Indicator Notifications Settings"
 msgstr ""
 
-#: src/indicator-notifications-settings.c:246
+#: src/indicator-notifications-settings.c:253
 msgid "Hide indicator"
 msgstr ""
 
-#: src/indicator-notifications-settings.c:256
+#: src/indicator-notifications-settings.c:263
 msgid "Maximum number of visible notifications"
 msgstr ""
 
-#: src/indicator-notifications-settings.c:292
+#: src/indicator-notifications-settings.c:299
 msgid "Remove"
 msgstr ""
 
-#: src/indicator-notifications-settings.c:297
+#: src/indicator-notifications-settings.c:304
 msgid "Add"
 msgstr ""
 

@@ -212,6 +212,13 @@ indicator_notifications_settings_activate(GApplication *app)
 
   IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) app;
 
+  /* Check for a pre-existing window */
+  GtkWindow *old_window = gtk_application_get_active_window(GTK_APPLICATION(app));
+  if (old_window != NULL) {
+    gtk_window_present_with_time(old_window, GDK_CURRENT_TIME);
+    return;
+  }
+
   /* GSettings */
   self->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
 
