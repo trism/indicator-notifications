@@ -9,6 +9,7 @@ libnotifications_la_SOURCES = \
 	urlregex.h \
 	notification-menuitem.c \
 	notification-menuitem.h \
+	settings.h \
 	indicator-notifications.c \
 	notification.c \
 	notification.h
@@ -28,6 +29,7 @@ libnotifications_la_LDFLAGS = \
 libexec_PROGRAMS = indicator-notifications-settings
 
 indicator_notifications_settings_SOURCES = \
+	settings.h \
 	indicator-notifications-settings.c
 
 indicator_notifications_settings_CFLAGS = \

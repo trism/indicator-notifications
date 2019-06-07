@@ -87,11 +87,7 @@ struct _IndicatorNotificationsPrivate {
 #define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
 
-#define NOTIFICATIONS_SCHEMA             "net.launchpad.indicator.notifications"
-#define NOTIFICATIONS_KEY_BLACKLIST      "blacklist"
-#define NOTIFICATIONS_KEY_CLEAR_MC       "clear-on-middle-click"
-#define NOTIFICATIONS_KEY_HIDE_INDICATOR "hide-indicator"
-#define NOTIFICATIONS_KEY_MAX_ITEMS      "max-items"
+#include "settings.h"
 
 #define INDICATOR_ICON_SIZE 22
 #define INDICATOR_ICON_READ   "indicator-notification-read"
