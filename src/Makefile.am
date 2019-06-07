@@ -1,5 +1,7 @@
 notificationslibdir = $(INDICATORDIR)
+
 notificationslib_LTLIBRARIES = libnotifications.la
+
 libnotifications_la_SOURCES = \
 	dbus-spy.c \
 	dbus-spy.h \
@@ -10,13 +12,27 @@ libnotifications_la_SOURCES = \
 	indicator-notifications.c \
 	notification.c \
 	notification.h
+
 libnotifications_la_CFLAGS = \
 	$(INDICATOR_CFLAGS) \
 	-Wall \
 	-DG_LOG_DOMAIN=\"Indicator-Notifications\"
+
 libnotifications_la_LIBADD = \
 	$(INDICATOR_LIBS)
+
 libnotifications_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
+libexec_PROGRAMS = indicator-notifications-settings
+
+indicator_notifications_settings_SOURCES = \
+	indicator-notifications-settings.c
+
+indicator_notifications_settings_CFLAGS = \
+	$(SETTINGS_CFLAGS) \
+	-Wall
+
+indicator_notifications_settings_LDADD = \
+	$(SETTINGS_LIBS)

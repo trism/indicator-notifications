@@ -66,5 +66,7 @@ data/net.launchpad.indicator.notifications.gschema.valid
 data/net.launchpad.indicator.notifications.gschema.xml
 data/net.launchpad.indicator.notifications.gschema.xml.in
 src/libnotifications_la-urlregex.lo
+src/indicator-notifications-settings
+src/*.o
 ar-lib
 ABOUT-NLS
