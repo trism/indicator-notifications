@@ -20,7 +20,6 @@ po/Makefile.in
 po/Makefile.in.in
 po/POTFILES
 po/stamp-it
-po/Makevars.template
 po/Rules-quot
 po/boldquot.sed
 po/en@boldquot.header

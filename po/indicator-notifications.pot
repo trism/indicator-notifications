@@ -1,14 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is put in the public domain.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-26 15:13-0500\n"
+"Project-Id-Version: indicator-notifications 0.3.3\n"
+"Report-Msgid-Bugs-To: jason.conti@gmail.com\n"
+"POT-Creation-Date: 2019-06-07 16:51-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,17 +17,80 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/indicator-notifications.c:160
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:5
+#: src/indicator-notifications-settings.c:267
+msgid "Discard notifications by application name"
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:6
+msgid ""
+"If an application name is in the blacklist, all notifications matching the "
+"application name will be discarded."
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:10
+#: src/indicator-notifications-settings.c:237
+msgid "Clear notifications on middle click"
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:11
+msgid ""
+"Normally when middle clicking the notification icon, the unread status will "
+"be toggled if the queue is not empty. With this option enabled, the "
+"notification queue will be cleared instead."
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:15
+msgid "Hide the indicator"
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:16
+msgid "If true, the indicator is hidden."
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:21
+msgid "Maximum number of visible items"
+msgstr ""
+
+#: data/net.launchpad.indicator.notifications.gschema.xml.in.in:22
+msgid ""
+"The indicator will only display at most the number of notifications "
+"indicated by this value."
+msgstr ""
+
+#: src/indicator-notifications.c:161
 msgid "Notifications"
 msgstr ""
 
-#: ../src/indicator-notifications.c:451
+#: src/indicator-notifications.c:461
 #, c-format
 msgid "Clear <small>(%d Notification)</small>"
 msgid_plural "Clear <small>(%d Notifications)</small>"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/notification-menuitem.c:96
+#: src/indicator-notifications-settings.c:220
+#: src/indicator-notifications-settings.c:226
+#: src/indicator-notifications-settings.c:341
+msgid "Indicator Notifications Settings"
+msgstr ""
+
+#: src/indicator-notifications-settings.c:246
+msgid "Hide indicator"
+msgstr ""
+
+#: src/indicator-notifications-settings.c:256
+msgid "Maximum number of visible notifications"
+msgstr ""
+
+#: src/indicator-notifications-settings.c:292
+msgid "Remove"
+msgstr ""
+
+#: src/indicator-notifications-settings.c:297
+msgid "Add"
+msgstr ""
+
+#: src/notification-menuitem.c:129
 msgid "from"
 msgstr ""
