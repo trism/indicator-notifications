@@ -1,3 +1,12 @@
+/*
+ * indicator-notifications-settings.c - UI for indicator settings
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <glib/gi18n.h>
 #include <gtk/gtk.h>
 
 #include "settings.h"
@@ -208,13 +217,13 @@ indicator_notifications_settings_activate(GApplication *app)
 
   /* Main Window */
   window = gtk_application_window_new(GTK_APPLICATION(app));
-  gtk_window_set_title(GTK_WINDOW(window), "Indicator Notifications Settings");
+  gtk_window_set_title(GTK_WINDOW(window), _("Indicator Notifications Settings"));
   gtk_window_set_default_size(GTK_WINDOW(window), 400, 400);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
   gtk_widget_show(window);
 
   /* Window Frame */
-  frame = gtk_frame_new("Indicator Notifications Settings");
+  frame = gtk_frame_new(_("Indicator Notifications Settings"));
   gtk_container_add(GTK_CONTAINER(window), frame);
   gtk_widget_show(frame);
 
@@ -225,7 +234,7 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_widget_show(vbox);
 
   /* clear-on-middle-click */
-  button_1 = gtk_check_button_new_with_label("Clear notifications on middle click");
+  button_1 = gtk_check_button_new_with_label(_("Clear notifications on middle click"));
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_1),
       g_settings_get_boolean(self->settings, NOTIFICATIONS_KEY_CLEAR_MC));
   g_object_set_data(G_OBJECT(button_1), SCHEMA_KEY, NOTIFICATIONS_KEY_CLEAR_MC);
@@ -234,7 +243,7 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_widget_show(button_1);
 
   /* hide-indicator */
-  button_2 = gtk_check_button_new_with_label("Hide indicator");
+  button_2 = gtk_check_button_new_with_label(_("Hide indicator"));
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_2),
       g_settings_get_boolean(self->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR));
   g_object_set_data(G_OBJECT(button_2), SCHEMA_KEY, NOTIFICATIONS_KEY_HIDE_INDICATOR);
@@ -244,7 +253,7 @@ indicator_notifications_settings_activate(GApplication *app)
 
   /* max-items */
   /* FIXME: indicator does not change max items until restart... */
-  spin_label = gtk_label_new("Maximum number of visible notifications");
+  spin_label = gtk_label_new(_("Maximum number of visible notifications"));
   gtk_box_pack_start(GTK_BOX(vbox), spin_label, FALSE, FALSE, 4);
   gtk_widget_show(spin_label);
 
@@ -255,7 +264,7 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_widget_show(spin);
 
   /* blacklist */
-  blacklist_label = gtk_label_new("Discard notifications by application name");
+  blacklist_label = gtk_label_new(_("Discard notifications by application name"));
   gtk_box_pack_start(GTK_BOX(vbox), blacklist_label, FALSE, FALSE, 4);
   gtk_widget_show(blacklist_label);
 
@@ -280,12 +289,12 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
   gtk_widget_show(hbox);
 
-  button_3 = gtk_button_new_with_label("Remove");
+  button_3 = gtk_button_new_with_label(_("Remove"));
   g_signal_connect(button_3, "clicked", G_CALLBACK(blacklist_remove_clicked_cb), self);
   gtk_box_pack_start(GTK_BOX(hbox), button_3, FALSE, FALSE, 2);
   gtk_widget_show(button_3);
 
-  button_4 = gtk_button_new_with_label("Add");
+  button_4 = gtk_button_new_with_label(_("Add"));
   g_signal_connect(button_4, "clicked", G_CALLBACK(blacklist_add_clicked_cb), self);
   gtk_box_pack_start(GTK_BOX(hbox), button_4, FALSE, FALSE, 2);
   gtk_widget_show(button_4);
@@ -329,7 +338,7 @@ indicator_notifications_settings_new (void)
 {
   IndicatorNotificationsSettings *self;
 
-  g_set_application_name("Indicator Notifications Settings");
+  g_set_application_name(_("Indicator Notifications Settings"));
 
   self = g_object_new(indicator_notifications_settings_get_type(),
     "application-id", NOTIFICATIONS_SCHEMA ".settings",
@@ -344,6 +353,10 @@ main(int argc, char **argv)
 {
   IndicatorNotificationsSettings *self;
   int status;
+
+  bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
+  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+  textdomain(GETTEXT_PACKAGE);
 
   self = indicator_notifications_settings_new();
 

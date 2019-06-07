@@ -33,6 +33,7 @@ indicator_notifications_settings_SOURCES = \
 	indicator-notifications-settings.c
 
 indicator_notifications_settings_CFLAGS = \
+	-DLOCALE_DIR=\""$(localedir)"\" \
 	$(SETTINGS_CFLAGS) \
 	-Wall
 

@@ -21,11 +21,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #endif
 
-#include <locale.h>
-#include <langinfo.h>
-#include <string.h>
-#include <time.h>
-
 /* GStuff */
 #include <glib.h>
 #include <glib/gi18n-lib.h>
