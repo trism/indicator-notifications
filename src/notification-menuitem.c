@@ -80,7 +80,8 @@ notification_menuitem_init(NotificationMenuItem *self)
   self->priv->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
   self->priv->label = gtk_label_new(NULL);
-  gtk_misc_set_alignment(GTK_MISC(self->priv->label), 0, 0);
+  gtk_label_set_xalign(GTK_LABEL(self->priv->label), 0);
+  gtk_label_set_yalign(GTK_LABEL(self->priv->label), 0);
   gtk_label_set_use_markup(GTK_LABEL(self->priv->label), TRUE);
   gtk_label_set_line_wrap(GTK_LABEL(self->priv->label), TRUE);
   gtk_label_set_line_wrap_mode(GTK_LABEL(self->priv->label), PANGO_WRAP_WORD_CHAR);

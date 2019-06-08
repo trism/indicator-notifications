@@ -177,7 +177,8 @@ indicator_notifications_init(IndicatorNotifications *self)
 
   /* Create the clear menuitem */
   self->priv->clear_item_label = gtk_label_new(NULL);
-  gtk_misc_set_alignment(GTK_MISC(self->priv->clear_item_label), 0, 0);
+  gtk_label_set_xalign(GTK_LABEL(self->priv->clear_item_label), 0);
+  gtk_label_set_yalign(GTK_LABEL(self->priv->clear_item_label), 0);
   gtk_label_set_use_markup(GTK_LABEL(self->priv->clear_item_label), TRUE);
   update_clear_item_markup(self);
   gtk_widget_show(self->priv->clear_item_label);
