@@ -15,7 +15,7 @@ libnotifications_la_SOURCES = \
 	notification.h
 
 libnotifications_la_CFLAGS = \
-	-DSETTINGS_PATH=\""$(libexecdir)/indicator-notifications-settings"\" \
+	-DSETTINGS_PATH=\""$(libexecdir)/$(PACKAGE)/indicator-notifications-settings"\" \
 	$(INDICATOR_CFLAGS) \
 	-Wall \
 	-DG_LOG_DOMAIN=\"Indicator-Notifications\"
@@ -27,7 +27,7 @@ libnotifications_la_LDFLAGS = \
 	-module \
 	-avoid-version
 
-libexec_PROGRAMS = indicator-notifications-settings
+pkglibexec_PROGRAMS = indicator-notifications-settings
 
 indicator_notifications_settings_SOURCES = \
 	settings.h \

@@ -18,6 +18,7 @@ data/indicator-example.service
 po/Makefile
 po/Makefile.in
 po/Makefile.in.in
+po/Makevars.template
 po/POTFILES
 po/stamp-it
 po/Rules-quot
