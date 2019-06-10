@@ -44,6 +44,7 @@ static void indicator_notifications_settings_activate(GApplication *app);
 
 /* Utility Functions */
 static void load_blacklist(IndicatorNotificationsSettings *self);
+static void load_blacklist_hints(IndicatorNotificationsSettings *self);
 static void save_blacklist(IndicatorNotificationsSettings *self);
 static gboolean foreach_check_duplicates(GtkTreeModel *model, GtkTreePath *path,
                                          GtkTreeIter *iter, gpointer user_data);
@@ -55,6 +56,7 @@ static void blacklist_add_clicked_cb(GtkButton *button, gpointer user_data);
 static void blacklist_remove_clicked_cb(GtkButton *button, gpointer user_data);
 static void button_toggled_cb(GtkToggleButton *button, gpointer user_data);
 static void max_items_changed_cb(GtkSpinButton *button, gpointer user_data);
+static gboolean blacklist_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 static void
 load_blacklist(IndicatorNotificationsSettings *self)
@@ -70,6 +72,26 @@ load_blacklist(IndicatorNotificationsSettings *self)
   for (int i = 0; items[i] != NULL; i++) {
     gtk_list_store_append(list, &iter);
     gtk_list_store_set(list, &iter, COLUMN_APPNAME, items[i], -1);
+  }
+
+  g_strfreev(items);
+}
+
+static void
+load_blacklist_hints(IndicatorNotificationsSettings *self)
+{
+  GtkEntryCompletion *completion = gtk_entry_get_completion(GTK_ENTRY(self->blacklist_entry));
+  GtkListStore *list = GTK_LIST_STORE(gtk_entry_completion_get_model(completion));
+  GtkTreeIter iter;
+  gchar **items;
+
+  gtk_list_store_clear(list);
+
+  items = g_settings_get_strv(self->settings, NOTIFICATIONS_KEY_BLACKLIST_HINTS);
+
+  for (int i = 0; items[i] != NULL; i++) {
+    gtk_list_store_append(list, &iter);
+    gtk_list_store_set(list, &iter, 0, items[i], -1);
   }
 
   g_strfreev(items);
@@ -191,6 +213,15 @@ max_items_changed_cb(GtkSpinButton *button, gpointer user_data)
   g_settings_set_int(settings, NOTIFICATIONS_KEY_MAX_ITEMS, value);
 }
 
+static gboolean
+blacklist_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+  IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) user_data;
+  load_blacklist_hints(self);
+  g_signal_emit_by_name(widget, "changed", NULL);
+  return FALSE;
+}
+
 static void
 indicator_notifications_settings_activate(GApplication *app)
 {
@@ -209,6 +240,8 @@ indicator_notifications_settings_activate(GApplication *app)
   GtkWidget *hbox;
   GtkWidget *button_3;
   GtkWidget *button_4;
+  GtkEntryCompletion *entry_completion;
+  GtkListStore *entry_list;
 
   IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) app;
 
@@ -309,6 +342,16 @@ indicator_notifications_settings_activate(GApplication *app)
   self->blacklist_entry = gtk_entry_new();
   gtk_box_pack_start(GTK_BOX(hbox), self->blacklist_entry, TRUE, TRUE, 0);
   gtk_widget_show(self->blacklist_entry);
+
+  entry_completion = gtk_entry_completion_new();
+  entry_list = gtk_list_store_new(1, G_TYPE_STRING);
+  gtk_entry_completion_set_model(entry_completion, GTK_TREE_MODEL(entry_list));
+  gtk_entry_completion_set_text_column(entry_completion, 0);
+  gtk_entry_completion_set_minimum_key_length(entry_completion, 0);
+  gtk_entry_set_completion(GTK_ENTRY(self->blacklist_entry), entry_completion);
+  /* When we focus the entry, emit the changed signal so we get the hints immediately */
+  /* also update the blacklist hints from gsettings */
+  g_signal_connect(self->blacklist_entry, "focus-in-event", G_CALLBACK(blacklist_entry_focus_in_cb), self);
 }
 
 static void

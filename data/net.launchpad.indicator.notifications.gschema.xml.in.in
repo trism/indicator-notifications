@@ -5,6 +5,11 @@
       <summary>Discard notifications by application name</summary>
       <description>If an application name is in the blacklist, all notifications matching the application name will be discarded.</description>
     </key>
+    <key name="blacklist-hints" type="as">
+      <default>[]</default>
+      <summary>Recent application names to suggest for the blacklist</summary>
+      <description>Keeps track of recent application names so we can suggest them in the settings.</description>
+    </key>
     <key name="clear-on-middle-click" type="b">
       <default>false</default>
       <summary>Clear notifications on middle click</summary>
