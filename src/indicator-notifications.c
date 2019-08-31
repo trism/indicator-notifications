@@ -89,8 +89,10 @@ struct _IndicatorNotificationsPrivate {
 #include "settings.h"
 
 #define INDICATOR_ICON_SIZE 22
-#define INDICATOR_ICON_READ   "indicator-notification-read"
-#define INDICATOR_ICON_UNREAD "indicator-notification-unread"
+#define INDICATOR_ICON_READ       "indicator-notification-read"
+#define INDICATOR_ICON_UNREAD     "indicator-notification-unread"
+#define INDICATOR_ICON_READ_DND   "indicator-notification-read-dnd"
+#define INDICATOR_ICON_UNREAD_DND "indicator-notification-unread-dnd"
 
 #define HINT_MAX 10
 
@@ -116,6 +118,7 @@ static void clear_menuitems(IndicatorNotifications *self);
 static void insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void set_unread(IndicatorNotifications *self, gboolean unread);
+static void update_unread(IndicatorNotifications *self);
 static void update_blacklist(IndicatorNotifications *self);
 static void update_clear_item_markup(IndicatorNotifications *self);
 static void update_indicator_visibility(IndicatorNotifications *self);
@@ -214,7 +217,6 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
   update_blacklist(self);
-  update_do_not_disturb(self);
   g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 
   /* Set up blacklist hints */
@@ -285,7 +287,8 @@ get_image(IndicatorObject *io)
 
   if(self->priv->image == NULL) {
     self->priv->image = GTK_IMAGE(gtk_image_new());
-    set_unread(self, FALSE);
+    /* We have to wait until the image is created to update do-not-disturb the first time */
+    update_do_not_disturb(self);
     update_indicator_visibility(self);
   }
 
@@ -439,14 +442,37 @@ set_unread(IndicatorNotifications *self, gboolean unread)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
 
-  if(unread) {
-    gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_UNREAD, GTK_ICON_SIZE_MENU);
+  self->priv->have_unread = unread;
+  update_unread(self);
+}
+
+/**
+ * update_unread:
+ * @self: the indicator object
+ *
+ * Updates the indicator icons.
+ **/
+static void
+update_unread(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+
+  if(self->priv->have_unread) {
+    if (self->priv->do_not_disturb) {
+      gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_UNREAD_DND, GTK_ICON_SIZE_MENU);
+    }
+    else {
+      gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_UNREAD, GTK_ICON_SIZE_MENU);
+    }
   }
   else {
-    gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_READ, GTK_ICON_SIZE_MENU);
+    if (self->priv->do_not_disturb) {
+      gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_READ_DND, GTK_ICON_SIZE_MENU);
+    }
+    else {
+      gtk_image_set_from_icon_name(self->priv->image, INDICATOR_ICON_READ, GTK_ICON_SIZE_MENU);
+    }
   }
-
-  self->priv->have_unread = unread;
 }
 
 /**
@@ -616,7 +642,7 @@ update_do_not_disturb(IndicatorNotifications *self)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
 
-  /* TODO: update icons here */
+  update_unread(self);
 
   /* Mate do-not-disturb support */
   settings_try_set_boolean(MATE_SCHEMA, MATE_KEY_DND, self->priv->do_not_disturb);
