@@ -61,6 +61,7 @@ struct _IndicatorNotificationsPrivate {
   GList       *hidden_items;
 
   gboolean     clear_on_middle_click;
+  gboolean     do_not_disturb;
   gboolean     have_unread;
   gboolean     hide_indicator;
 
@@ -121,6 +122,8 @@ static void update_indicator_visibility(IndicatorNotifications *self);
 static void load_blacklist_hints(IndicatorNotifications *self);
 static void save_blacklist_hints(IndicatorNotifications *self);
 static void update_blacklist_hints(IndicatorNotifications *self, Notification *notification);
+static void update_do_not_disturb(IndicatorNotifications *self);
+static void settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value);
 
 /* Callbacks */
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
@@ -207,9 +210,11 @@ indicator_notifications_init(IndicatorNotifications *self)
   /* Connect to GSettings */
   self->priv->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
   self->priv->clear_on_middle_click = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_CLEAR_MC);
+  self->priv->do_not_disturb = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_DND);
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
   update_blacklist(self);
+  update_do_not_disturb(self);
   g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 
   /* Set up blacklist hints */
@@ -600,6 +605,66 @@ update_blacklist_hints(IndicatorNotifications *self, Notification *notification)
 }
 
 /**
+ * update_do_not_disturb:
+ * @self: the indicator object
+ *
+ * Updates the icon with the do-not-disturb version and sets do-not-disturb options
+ * on external notification daemons that are supported.
+ **/
+static void
+update_do_not_disturb(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+
+  /* TODO: update icons here */
+
+  /* Mate do-not-disturb support */
+  settings_try_set_boolean(MATE_SCHEMA, MATE_KEY_DND, self->priv->do_not_disturb);
+}
+
+/**
+ * settings_try_set_boolean:
+ * @schema: the GSettings schema
+ * @key: the GSettings key
+ * @value: the boolean value
+ *
+ * Checks to see if the schema and key exist before setting the value.
+ */
+static void
+settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value)
+{
+  /* Check if we can access the schema */
+  GSettingsSchemaSource *source = g_settings_schema_source_get_default();
+  if (source == NULL) {
+    return;
+  }
+
+  /* Lookup the schema */
+  GSettingsSchema *source_schema = g_settings_schema_source_lookup(source, schema, FALSE);
+
+  /* Couldn't find the schema */
+  if (source_schema == NULL) {
+    return;
+  }
+
+  /* Found the schema, make sure we have the key */
+  if (g_settings_schema_has_key(source_schema, key)) {
+    /* Make sure the key is of boolean type */
+    GSettingsSchemaKey *source_key = g_settings_schema_get_key(source_schema, key);
+
+    if (g_variant_type_equal(g_settings_schema_key_get_value_type(source_key), G_VARIANT_TYPE_BOOLEAN)) {
+      /* Set the value */
+      GSettings *settings = g_settings_new(schema);
+      g_settings_set_boolean(settings, key, value);
+      g_object_unref(settings);
+    }
+
+    g_settings_schema_key_unref(source_key);
+  }
+  g_settings_schema_unref(source_schema);
+}
+
+/**
  * clear_item_activated_cb:
  * @menuitem: the clear menuitem
  * @user_data: the indicator object
@@ -662,6 +727,10 @@ setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
   if(g_strcmp0(key, NOTIFICATIONS_KEY_HIDE_INDICATOR) == 0) {
     self->priv->hide_indicator = g_settings_get_boolean(settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
     update_indicator_visibility(self);
+  }
+  else if(g_strcmp0(key, NOTIFICATIONS_KEY_DND) == 0) {
+    self->priv->do_not_disturb = g_settings_get_boolean(settings, NOTIFICATIONS_KEY_DND);
+    update_do_not_disturb(self);
   }
   else if(g_strcmp0(key, NOTIFICATIONS_KEY_CLEAR_MC) == 0) {
     self->priv->clear_on_middle_click = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_CLEAR_MC);

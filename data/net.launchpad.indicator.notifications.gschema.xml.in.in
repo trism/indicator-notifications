@@ -15,6 +15,11 @@
       <summary>Clear notifications on middle click</summary>
       <description>Normally when middle clicking the notification icon, the unread status will be toggled if the queue is not empty. With this option enabled, the notification queue will be cleared instead.</description>
     </key>
+    <key name="do-not-disturb" type="b">
+      <default>false</default>
+      <summary>Enable do-not-disturb mode</summary>
+      <description>On supported desktops enables do-not-disturb mode on the notification daemon.</description>
+    </key>
     <key name="hide-indicator" type="b">
       <default>false</default>
       <summary>Hide the indicator</summary>

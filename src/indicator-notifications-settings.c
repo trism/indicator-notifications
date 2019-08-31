@@ -13,9 +13,6 @@
 
 #define SCHEMA_KEY "schema-key"
 
-#define MATE_SCHEMA "org.mate.NotificationDaemon"
-#define MATE_KEY_DND "do-not-disturb"
-
 #define COLUMN_APPNAME 0
 
 typedef struct
@@ -53,11 +50,6 @@ static gboolean foreach_check_duplicates(GtkTreeModel *model, GtkTreePath *path,
                                          GtkTreeIter *iter, gpointer user_data);
 static gboolean foreach_build_array(GtkTreeModel *model, GtkTreePath *path,
                                     GtkTreeIter *iter, gpointer user_data);
-
-/* Mate Functions */
-static gboolean has_mate_dnd();
-static gboolean get_mate_dnd();
-static void mate_dnd_button_toggled_cb(GtkToggleButton *button, gpointer user_data);
 
 /* Callbacks */
 static void blacklist_add_clicked_cb(GtkButton *button, gpointer user_data);
@@ -155,47 +147,6 @@ foreach_build_array(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, g
   return FALSE;
 }
 
-static gboolean
-has_mate_dnd()
-{
-  /* Check if we can access the mate do-not-disturb key */
-  GSettingsSchemaSource *source = g_settings_schema_source_get_default();
-  if (source == NULL) {
-    return FALSE;
-  }
-
-  /* Lookup the schema */
-  GSettingsSchema *schema = g_settings_schema_source_lookup(source, MATE_SCHEMA, FALSE);
-
-  /* Couldn't find the schema */
-  if (schema == NULL) {
-    return FALSE;
-  }
-
-  /* Found the schema, make sure we have the do-not-disturb key */
-  gboolean result = g_settings_schema_has_key(schema, MATE_KEY_DND);
-  g_settings_schema_unref(schema);
-
-  return result;
-}
-
-static gboolean
-get_mate_dnd()
-{
-  GSettings *settings = g_settings_new(MATE_SCHEMA);
-  gboolean result = g_settings_get_boolean(settings, MATE_KEY_DND);
-  g_object_unref(settings);
-  return result;
-}
-
-static void
-mate_dnd_button_toggled_cb(GtkToggleButton *button, gpointer user_data)
-{
-  GSettings *settings = g_settings_new(MATE_SCHEMA);
-  g_settings_set_boolean(settings, MATE_KEY_DND, gtk_toggle_button_get_active(button));
-  g_object_unref(settings);
-}
-
 static void
 blacklist_add_clicked_cb(GtkButton *button, gpointer user_data)
 {
@@ -279,7 +230,7 @@ indicator_notifications_settings_activate(GApplication *app)
   GtkWidget *vbox;
   GtkWidget *button_cmc;
   GtkWidget *button_hide_ind;
-  GtkWidget *button_mate_dnd;
+  GtkWidget *button_dnd;
   GtkWidget *spin;
   GtkWidget *spin_label;
   GtkWidget *blacklist_label;
@@ -341,14 +292,14 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_box_pack_start(GTK_BOX(vbox), button_hide_ind, FALSE, FALSE, 4);
   gtk_widget_show(button_hide_ind);
 
-  /* mate do-not-disturb */
-  if (has_mate_dnd()) {
-    button_mate_dnd = gtk_check_button_new_with_label(_("Mate Desktop Do Not Disturb"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_mate_dnd), get_mate_dnd());
-    g_signal_connect(button_mate_dnd, "toggled", G_CALLBACK(mate_dnd_button_toggled_cb), NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), button_mate_dnd, FALSE, FALSE, 4);
-    gtk_widget_show(button_mate_dnd);
-  }
+  /* do-not-disturb */
+  button_dnd = gtk_check_button_new_with_label(_("Do not disturb"));
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_dnd),
+      g_settings_get_boolean(self->settings, NOTIFICATIONS_KEY_DND));
+  g_object_set_data(G_OBJECT(button_dnd), SCHEMA_KEY, NOTIFICATIONS_KEY_DND);
+  g_signal_connect(button_dnd, "toggled", G_CALLBACK(button_toggled_cb), self->settings);
+  gtk_box_pack_start(GTK_BOX(vbox), button_dnd, FALSE, FALSE, 4);
+  gtk_widget_show(button_dnd);
 
   /* max-items */
   /* FIXME: indicator does not change max items until restart... */
