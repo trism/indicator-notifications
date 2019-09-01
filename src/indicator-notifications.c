@@ -182,7 +182,7 @@ indicator_notifications_init(IndicatorNotifications *self)
   g_signal_connect(self->priv->menu, "notify::visible", G_CALLBACK(menu_visible_notify_cb), self);
 
   /* Create the settings menuitem */
-  self->priv->settings_item = gtk_menu_item_new_with_label(_("Settings..."));
+  self->priv->settings_item = gtk_menu_item_new_with_label(_("Settings…"));
   g_signal_connect(self->priv->settings_item, "activate", G_CALLBACK(settings_item_activated_cb), NULL);
   gtk_widget_show(self->priv->settings_item);
 
