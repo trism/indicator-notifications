@@ -293,7 +293,7 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_widget_show(button_hide_ind);
 
   /* do-not-disturb */
-  button_dnd = gtk_check_button_new_with_label(_("Do not disturb"));
+  button_dnd = gtk_check_button_new_with_label(_("Enable do not disturb"));
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_dnd),
       g_settings_get_boolean(self->settings, NOTIFICATIONS_KEY_DND));
   g_object_set_data(G_OBJECT(button_dnd), SCHEMA_KEY, NOTIFICATIONS_KEY_DND);

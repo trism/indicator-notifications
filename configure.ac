@@ -1,4 +1,4 @@
-AC_INIT([indicator-notifications], [0.4.0], [jason.conti@gmail.com])
+AC_INIT([indicator-notifications], [0.4.2], [jason.conti@gmail.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
