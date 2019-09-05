@@ -806,6 +806,12 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(user_data));
   IndicatorNotifications *self = INDICATOR_NOTIFICATIONS(user_data);
 
+  /* Discard notifications if we are hidden */
+  if(self->priv->hide_indicator) {
+    g_object_unref(note);
+    return;
+  }
+
   /* Discard useless notifications */
   if(notification_is_private(note) || notification_is_empty(note)) {
     g_object_unref(note);
