@@ -231,6 +231,7 @@ indicator_notifications_settings_activate(GApplication *app)
   GtkWidget *button_cmc;
   GtkWidget *button_hide_ind;
   GtkWidget *button_dnd;
+  GtkWidget *button_swap_clr_s;
   GtkWidget *spin;
   GtkWidget *spin_label;
   GtkWidget *blacklist_label;
@@ -300,6 +301,15 @@ indicator_notifications_settings_activate(GApplication *app)
   g_signal_connect(button_dnd, "toggled", G_CALLBACK(button_toggled_cb), self->settings);
   gtk_box_pack_start(GTK_BOX(vbox), button_dnd, FALSE, FALSE, 4);
   gtk_widget_show(button_dnd);
+
+  /* swap-clear-settings */
+  button_swap_clr_s = gtk_check_button_new_with_label(_("Swap \"Clear\" and \"Settings\" items"));
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_swap_clr_s),
+      g_settings_get_boolean(self->settings, NOTIFICATIONS_KEY_SWAP_CLEAR_SETTINGS));
+  g_object_set_data(G_OBJECT(button_swap_clr_s), SCHEMA_KEY, NOTIFICATIONS_KEY_SWAP_CLEAR_SETTINGS);
+  g_signal_connect(button_swap_clr_s, "toggled", G_CALLBACK(button_toggled_cb), self->settings);
+  gtk_box_pack_start(GTK_BOX(vbox), button_swap_clr_s, FALSE, FALSE, 4);
+  gtk_widget_show(button_swap_clr_s);
 
   /* max-items */
   /* FIXME: indicator does not change max items until restart... */
