@@ -1,13 +1,13 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
   <schema id="net.launchpad.indicator.notifications" path="/net/launchpad/indicator/notifications/">
-    <key name="blacklist" type="as">
+    <key name="filter-list" type="as">
       <default>[]</default>
       <summary>Discard notifications by application name</summary>
-      <description>If an application name is in the blacklist, all notifications matching the application name will be discarded.</description>
+      <description>If an application name is in the filter list, all notifications matching the application name will be discarded.</description>
     </key>
-    <key name="blacklist-hints" type="as">
+    <key name="filter-list-hints" type="as">
       <default>[]</default>
-      <summary>Recent application names to suggest for the blacklist</summary>
+      <summary>Recent application names to suggest for the filter list</summary>
       <description>Keeps track of recent application names so we can suggest them in the settings.</description>
     </key>
     <key name="clear-on-middle-click" type="b">

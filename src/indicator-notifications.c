@@ -76,9 +76,9 @@ struct _IndicatorNotificationsPrivate {
 
   DBusSpy     *spy;
 
-  GHashTable  *blacklist;
+  GHashTable  *filter_list;
 
-  GList       *blacklist_hints;
+  GList       *filter_list_hints;
 
   GSettings   *settings;
 };
@@ -119,12 +119,12 @@ static void insert_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void remove_menuitem(IndicatorNotifications *self, GtkWidget *item);
 static void set_unread(IndicatorNotifications *self, gboolean unread);
 static void update_unread(IndicatorNotifications *self);
-static void update_blacklist(IndicatorNotifications *self);
+static void update_filter_list(IndicatorNotifications *self);
 static void update_clear_item_markup(IndicatorNotifications *self);
 static void update_indicator_visibility(IndicatorNotifications *self);
-static void load_blacklist_hints(IndicatorNotifications *self);
-static void save_blacklist_hints(IndicatorNotifications *self);
-static void update_blacklist_hints(IndicatorNotifications *self, Notification *notification);
+static void load_filter_list_hints(IndicatorNotifications *self);
+static void save_filter_list_hints(IndicatorNotifications *self);
+static void update_filter_list_hints(IndicatorNotifications *self, Notification *notification);
 static void update_do_not_disturb(IndicatorNotifications *self);
 static void settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value);
 
@@ -207,8 +207,8 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->spy = dbus_spy_new();
   g_signal_connect(self->priv->spy, DBUS_SPY_SIGNAL_MESSAGE_RECEIVED, G_CALLBACK(message_received_cb), self);
 
-  /* Initialize an empty blacklist */
-  self->priv->blacklist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+  /* Initialize an empty filter list */
+  self->priv->filter_list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
   /* Connect to GSettings */
   self->priv->settings = g_settings_new(NOTIFICATIONS_SCHEMA);
@@ -216,12 +216,12 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->do_not_disturb = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_DND);
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
-  update_blacklist(self);
+  update_filter_list(self);
   g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 
-  /* Set up blacklist hints */
-  self->priv->blacklist_hints = NULL;
-  load_blacklist_hints(self);
+  /* Set up filter list hints */
+  self->priv->filter_list_hints = NULL;
+  load_filter_list_hints(self);
 }
 
 static void
@@ -259,14 +259,14 @@ indicator_notifications_dispose(GObject *object)
     self->priv->settings = NULL;
   }
 
-  if(self->priv->blacklist != NULL) {
-    g_hash_table_unref(self->priv->blacklist);
-    self->priv->blacklist = NULL;
+  if(self->priv->filter_list != NULL) {
+    g_hash_table_unref(self->priv->filter_list);
+    self->priv->filter_list = NULL;
   }
 
-  if(self->priv->blacklist_hints != NULL) {
-    g_list_free_full(self->priv->blacklist_hints, g_free);
-    self->priv->blacklist_hints = NULL;
+  if(self->priv->filter_list_hints != NULL) {
+    g_list_free_full(self->priv->filter_list_hints, g_free);
+    self->priv->filter_list_hints = NULL;
   }
 
   G_OBJECT_CLASS (indicator_notifications_parent_class)->dispose (object);
@@ -476,24 +476,24 @@ update_unread(IndicatorNotifications *self)
 }
 
 /**
- * update_blacklist:
+ * update_filter_list:
  * @self: the indicator object
  *
- * Updates the blacklist from GSettings. This currently does not filter already
+ * Updates the filter list from GSettings. This currently does not filter already
  * allowed messages. It only applies to messages received in the future.
  **/
 static void
-update_blacklist(IndicatorNotifications *self)
+update_filter_list(IndicatorNotifications *self)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
-  g_return_if_fail(self->priv->blacklist != NULL);
+  g_return_if_fail(self->priv->filter_list != NULL);
 
-  g_hash_table_remove_all(self->priv->blacklist);
-  gchar **items = g_settings_get_strv(self->priv->settings, NOTIFICATIONS_KEY_BLACKLIST);
+  g_hash_table_remove_all(self->priv->filter_list);
+  gchar **items = g_settings_get_strv(self->priv->settings, NOTIFICATIONS_KEY_FILTER_LIST);
   int i;
 
   for(i = 0; items[i] != NULL; i++) {
-    g_hash_table_insert(self->priv->blacklist, g_strdup(items[i]), NULL);
+    g_hash_table_insert(self->priv->filter_list, g_strdup(items[i]), NULL);
   }
 
   g_strfreev(items);
@@ -549,35 +549,35 @@ update_indicator_visibility(IndicatorNotifications *self)
 }
 
 /**
- * load_blacklist_hints:
+ * load_filter_list_hints:
  * @self: the indicator object
  *
- * Loads the blacklist hints from gsettings
+ * Loads the filter list hints from gsettings
  **/
 static void
-load_blacklist_hints(IndicatorNotifications *self)
+load_filter_list_hints(IndicatorNotifications *self)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
-  g_return_if_fail(self->priv->blacklist_hints == NULL);
+  g_return_if_fail(self->priv->filter_list_hints == NULL);
 
-  gchar **items = g_settings_get_strv(self->priv->settings, NOTIFICATIONS_KEY_BLACKLIST_HINTS);
+  gchar **items = g_settings_get_strv(self->priv->settings, NOTIFICATIONS_KEY_FILTER_LIST_HINTS);
   int i;
 
   for (i = 0; items[i] != NULL; i++) {
-    self->priv->blacklist_hints = g_list_prepend(self->priv->blacklist_hints, items[i]);
+    self->priv->filter_list_hints = g_list_prepend(self->priv->filter_list_hints, items[i]);
   }
 
   g_free(items);
 }
 
 /**
- * save_blacklist_hints:
+ * save_filter_list_hints:
  * @self: the indicator object
  *
- * Saves the blacklist hints to gsettings
+ * Saves the filter list hints to gsettings
  **/
 static void
-save_blacklist_hints(IndicatorNotifications *self)
+save_filter_list_hints(IndicatorNotifications *self)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
 
@@ -585,23 +585,23 @@ save_blacklist_hints(IndicatorNotifications *self)
   int i = 0;
 
   GList *l;
-  for (l = self->priv->blacklist_hints; (l != NULL) && (i < HINT_MAX); l = l->next, i++) {
+  for (l = self->priv->filter_list_hints; (l != NULL) && (i < HINT_MAX); l = l->next, i++) {
     hints[i] = (gchar *) l->data;
   }
 
   hints[i] = NULL;
 
-  g_settings_set_strv(self->priv->settings, NOTIFICATIONS_KEY_BLACKLIST_HINTS, (const gchar **) hints);
+  g_settings_set_strv(self->priv->settings, NOTIFICATIONS_KEY_FILTER_LIST_HINTS, (const gchar **) hints);
 }
 
 /**
- * update_blacklist_hints:
+ * update_filter_list_hints:
  * @self: the indicator object
  *
  * Adds an application name to the hints
  **/
 static void
-update_blacklist_hints(IndicatorNotifications *self, Notification *notification)
+update_filter_list_hints(IndicatorNotifications *self, Notification *notification)
 {
   g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
   g_return_if_fail(IS_NOTIFICATION(notification));
@@ -610,24 +610,24 @@ update_blacklist_hints(IndicatorNotifications *self, Notification *notification)
 
   /* Avoid duplicates */
   GList *l;
-  for (l = self->priv->blacklist_hints; l != NULL; l = l->next) {
+  for (l = self->priv->filter_list_hints; l != NULL; l = l->next) {
     if (g_strcmp0(appname, (const gchar *) l->data) == 0)
       return;
   }
 
   /* Add the appname */
-  self->priv->blacklist_hints = g_list_prepend(self->priv->blacklist_hints, g_strdup(appname));
+  self->priv->filter_list_hints = g_list_prepend(self->priv->filter_list_hints, g_strdup(appname));
 
   /* Keep only a reasonable number */
-  while (g_list_length(self->priv->blacklist_hints) > HINT_MAX) {
-    GList *last = g_list_last(self->priv->blacklist_hints);
+  while (g_list_length(self->priv->filter_list_hints) > HINT_MAX) {
+    GList *last = g_list_last(self->priv->filter_list_hints);
     g_free(last->data);
-    self->priv->blacklist_hints = g_list_delete_link(self->priv->blacklist_hints, last);
+    self->priv->filter_list_hints = g_list_delete_link(self->priv->filter_list_hints, last);
   }
 
   /* Save the hints */
   /* FIXME: maybe don't do this every update */
-  save_blacklist_hints(self);
+  save_filter_list_hints(self);
 }
 
 /**
@@ -761,8 +761,8 @@ setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
   else if(g_strcmp0(key, NOTIFICATIONS_KEY_CLEAR_MC) == 0) {
     self->priv->clear_on_middle_click = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_CLEAR_MC);
   }
-  else if(g_strcmp0(key, NOTIFICATIONS_KEY_BLACKLIST) == 0) {
-    update_blacklist(self);
+  else if(g_strcmp0(key, NOTIFICATIONS_KEY_FILTER_LIST) == 0) {
+    update_filter_list(self);
   }
   /* TODO: Trim or extend the notifications list based on "max-items" key
    * (Currently requires a restart) */
@@ -818,15 +818,15 @@ message_received_cb(DBusSpy *spy, Notification *note, gpointer user_data)
     return;
   }
 
-  /* Discard notifications on the blacklist */
-  if(self->priv->blacklist != NULL && g_hash_table_contains(self->priv->blacklist,
+  /* Discard notifications on the filter list */
+  if(self->priv->filter_list != NULL && g_hash_table_contains(self->priv->filter_list,
         notification_get_app_name(note))) {
     g_object_unref(note);
     return;
   }
 
   /* Save a hint for the appname */
-  update_blacklist_hints(self, note);
+  update_filter_list_hints(self, note);
 
   /* Create the menuitem */
   GtkWidget *item = notification_menuitem_new();

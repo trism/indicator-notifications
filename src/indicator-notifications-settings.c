@@ -21,8 +21,8 @@ typedef struct
 
   GSettings *settings;
 
-  GtkWidget *blacklist_treeview;
-  GtkWidget *blacklist_entry;
+  GtkWidget *filter_list_treeview;
+  GtkWidget *filter_list_entry;
 
   /* GtkTreeModel foreach variables */
   gboolean result;
@@ -43,31 +43,31 @@ static void indicator_notifications_settings_dispose(GObject *object);
 static void indicator_notifications_settings_activate(GApplication *app);
 
 /* Utility Functions */
-static void load_blacklist(IndicatorNotificationsSettings *self);
-static void load_blacklist_hints(IndicatorNotificationsSettings *self);
-static void save_blacklist(IndicatorNotificationsSettings *self);
+static void load_filter_list(IndicatorNotificationsSettings *self);
+static void load_filter_list_hints(IndicatorNotificationsSettings *self);
+static void save_filter_list(IndicatorNotificationsSettings *self);
 static gboolean foreach_check_duplicates(GtkTreeModel *model, GtkTreePath *path,
                                          GtkTreeIter *iter, gpointer user_data);
 static gboolean foreach_build_array(GtkTreeModel *model, GtkTreePath *path,
                                     GtkTreeIter *iter, gpointer user_data);
 
 /* Callbacks */
-static void blacklist_add_clicked_cb(GtkButton *button, gpointer user_data);
-static void blacklist_remove_clicked_cb(GtkButton *button, gpointer user_data);
+static void filter_list_add_clicked_cb(GtkButton *button, gpointer user_data);
+static void filter_list_remove_clicked_cb(GtkButton *button, gpointer user_data);
 static void button_toggled_cb(GtkToggleButton *button, gpointer user_data);
 static void max_items_changed_cb(GtkSpinButton *button, gpointer user_data);
-static gboolean blacklist_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+static gboolean filter_list_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 static void
-load_blacklist(IndicatorNotificationsSettings *self)
+load_filter_list(IndicatorNotificationsSettings *self)
 {
-  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->blacklist_treeview)));
+  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->filter_list_treeview)));
   GtkTreeIter iter;
   gchar **items;
 
   gtk_list_store_clear(list);
 
-  items = g_settings_get_strv(self->settings, NOTIFICATIONS_KEY_BLACKLIST);
+  items = g_settings_get_strv(self->settings, NOTIFICATIONS_KEY_FILTER_LIST);
 
   for (int i = 0; items[i] != NULL; i++) {
     gtk_list_store_append(list, &iter);
@@ -78,16 +78,16 @@ load_blacklist(IndicatorNotificationsSettings *self)
 }
 
 static void
-load_blacklist_hints(IndicatorNotificationsSettings *self)
+load_filter_list_hints(IndicatorNotificationsSettings *self)
 {
-  GtkEntryCompletion *completion = gtk_entry_get_completion(GTK_ENTRY(self->blacklist_entry));
+  GtkEntryCompletion *completion = gtk_entry_get_completion(GTK_ENTRY(self->filter_list_entry));
   GtkListStore *list = GTK_LIST_STORE(gtk_entry_completion_get_model(completion));
   GtkTreeIter iter;
   gchar **items;
 
   gtk_list_store_clear(list);
 
-  items = g_settings_get_strv(self->settings, NOTIFICATIONS_KEY_BLACKLIST_HINTS);
+  items = g_settings_get_strv(self->settings, NOTIFICATIONS_KEY_FILTER_LIST_HINTS);
 
   for (int i = 0; items[i] != NULL; i++) {
     gtk_list_store_append(list, &iter);
@@ -98,19 +98,19 @@ load_blacklist_hints(IndicatorNotificationsSettings *self)
 }
 
 static void
-save_blacklist(IndicatorNotificationsSettings *self)
+save_filter_list(IndicatorNotificationsSettings *self)
 {
-  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->blacklist_treeview)));
+  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->filter_list_treeview)));
   gchar **items;
 
-  /* build an array of the blacklist items */
+  /* build an array of the filter list items */
   self->array = g_ptr_array_new();
   gtk_tree_model_foreach(GTK_TREE_MODEL(list), foreach_build_array, self);
   g_ptr_array_add(self->array, NULL);
   items = (gchar **) g_ptr_array_free(self->array, FALSE);
   self->array = NULL;
 
-  g_settings_set_strv(self->settings, NOTIFICATIONS_KEY_BLACKLIST, (const gchar **) items);
+  g_settings_set_strv(self->settings, NOTIFICATIONS_KEY_FILTER_LIST, (const gchar **) items);
 
   g_strfreev(items);
 }
@@ -148,14 +148,14 @@ foreach_build_array(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, g
 }
 
 static void
-blacklist_add_clicked_cb(GtkButton *button, gpointer user_data)
+filter_list_add_clicked_cb(GtkButton *button, gpointer user_data)
 {
   IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) user_data;
-  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->blacklist_treeview)));
+  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->filter_list_treeview)));
   GtkTreeIter iter;
 
   /* strip off the leading and trailing whitespace in case of user error */
-  self->text = g_strdup(gtk_entry_get_text(GTK_ENTRY(self->blacklist_entry)));
+  self->text = g_strdup(gtk_entry_get_text(GTK_ENTRY(self->filter_list_entry)));
   g_strstrip(self->text);
 
   if (strlen(self->text) > 0) {
@@ -166,12 +166,12 @@ blacklist_add_clicked_cb(GtkButton *button, gpointer user_data)
     if (self->result == FALSE) {
       gtk_list_store_append(list, &iter);
       gtk_list_store_set(list, &iter, COLUMN_APPNAME, self->text, -1);
-      save_blacklist(self);
+      save_filter_list(self);
     }
   }
 
   /* clear the entry */
-  gtk_entry_set_text(GTK_ENTRY(self->blacklist_entry), "");
+  gtk_entry_set_text(GTK_ENTRY(self->filter_list_entry), "");
 
   /* cleanup text */
   g_free(self->text);
@@ -179,19 +179,19 @@ blacklist_add_clicked_cb(GtkButton *button, gpointer user_data)
 }
 
 static void
-blacklist_remove_clicked_cb(GtkButton *button, gpointer user_data)
+filter_list_remove_clicked_cb(GtkButton *button, gpointer user_data)
 {
   IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) user_data;
-  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->blacklist_treeview)));
+  GtkListStore *list = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(self->filter_list_treeview)));
   GtkTreeIter iter;
   GtkTreeSelection *selection;
 
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(self->blacklist_treeview));
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(self->filter_list_treeview));
 
   if (gtk_tree_selection_get_selected(selection, NULL, &iter) == TRUE) {
     gtk_list_store_remove(list, &iter);
 
-    save_blacklist(self);
+    save_filter_list(self);
   }
 }
 
@@ -214,10 +214,10 @@ max_items_changed_cb(GtkSpinButton *button, gpointer user_data)
 }
 
 static gboolean
-blacklist_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+filter_list_entry_focus_in_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
   IndicatorNotificationsSettings *self = (IndicatorNotificationsSettings *) user_data;
-  load_blacklist_hints(self);
+  load_filter_list_hints(self);
   g_signal_emit_by_name(widget, "changed", NULL);
   return FALSE;
 }
@@ -233,14 +233,14 @@ indicator_notifications_settings_activate(GApplication *app)
   GtkWidget *button_dnd;
   GtkWidget *spin;
   GtkWidget *spin_label;
-  GtkWidget *blacklist_label;
-  GtkListStore *blacklist_list;
-  GtkWidget *blacklist_scroll;
+  GtkWidget *filter_list_label;
+  GtkListStore *filter_list_list;
+  GtkWidget *filter_list_scroll;
   GtkTreeViewColumn *column;
   GtkCellRenderer *renderer;
   GtkWidget *hbox;
-  GtkWidget *button_blacklist_rem;
-  GtkWidget *button_blacklist_add;
+  GtkWidget *button_filter_list_rem;
+  GtkWidget *button_filter_list_add;
   GtkEntryCompletion *entry_completion;
   GtkListStore *entry_list;
 
@@ -313,55 +313,55 @@ indicator_notifications_settings_activate(GApplication *app)
   gtk_box_pack_start(GTK_BOX(vbox), spin, FALSE, FALSE, 4);
   gtk_widget_show(spin);
 
-  /* blacklist */
-  blacklist_label = gtk_label_new(_("Discard notifications by application name"));
-  gtk_box_pack_start(GTK_BOX(vbox), blacklist_label, FALSE, FALSE, 4);
-  gtk_widget_show(blacklist_label);
+  /* filter-list */
+  filter_list_label = gtk_label_new(_("Discard notifications by application name"));
+  gtk_box_pack_start(GTK_BOX(vbox), filter_list_label, FALSE, FALSE, 4);
+  gtk_widget_show(filter_list_label);
 
-  blacklist_scroll = gtk_scrolled_window_new(NULL, NULL);
-  gtk_box_pack_start(GTK_BOX(vbox), blacklist_scroll, TRUE, TRUE, 4);
-  gtk_widget_show(blacklist_scroll);
+  filter_list_scroll = gtk_scrolled_window_new(NULL, NULL);
+  gtk_box_pack_start(GTK_BOX(vbox), filter_list_scroll, TRUE, TRUE, 4);
+  gtk_widget_show(filter_list_scroll);
 
-  blacklist_list = gtk_list_store_new(1, G_TYPE_STRING);
+  filter_list_list = gtk_list_store_new(1, G_TYPE_STRING);
 
   renderer = gtk_cell_renderer_text_new();
   column = gtk_tree_view_column_new_with_attributes("appname", renderer, "text", COLUMN_APPNAME, NULL);
 
-  self->blacklist_treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(blacklist_list));
-  g_object_unref(blacklist_list);
-  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(self->blacklist_treeview), FALSE);
-  gtk_tree_view_append_column(GTK_TREE_VIEW(self->blacklist_treeview), column);
-  load_blacklist(self);
-  gtk_container_add(GTK_CONTAINER(blacklist_scroll), self->blacklist_treeview);
-  gtk_widget_show(self->blacklist_treeview);
+  self->filter_list_treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(filter_list_list));
+  g_object_unref(filter_list_list);
+  gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(self->filter_list_treeview), FALSE);
+  gtk_tree_view_append_column(GTK_TREE_VIEW(self->filter_list_treeview), column);
+  load_filter_list(self);
+  gtk_container_add(GTK_CONTAINER(filter_list_scroll), self->filter_list_treeview);
+  gtk_widget_show(self->filter_list_treeview);
 
   hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
   gtk_widget_show(hbox);
 
-  button_blacklist_rem = gtk_button_new_with_label(_("Remove"));
-  g_signal_connect(button_blacklist_rem, "clicked", G_CALLBACK(blacklist_remove_clicked_cb), self);
-  gtk_box_pack_start(GTK_BOX(hbox), button_blacklist_rem, FALSE, FALSE, 2);
-  gtk_widget_show(button_blacklist_rem);
+  button_filter_list_rem = gtk_button_new_with_label(_("Remove"));
+  g_signal_connect(button_filter_list_rem, "clicked", G_CALLBACK(filter_list_remove_clicked_cb), self);
+  gtk_box_pack_start(GTK_BOX(hbox), button_filter_list_rem, FALSE, FALSE, 2);
+  gtk_widget_show(button_filter_list_rem);
 
-  button_blacklist_add = gtk_button_new_with_label(_("Add"));
-  g_signal_connect(button_blacklist_add, "clicked", G_CALLBACK(blacklist_add_clicked_cb), self);
-  gtk_box_pack_start(GTK_BOX(hbox), button_blacklist_add, FALSE, FALSE, 2);
-  gtk_widget_show(button_blacklist_add);
+  button_filter_list_add = gtk_button_new_with_label(_("Add"));
+  g_signal_connect(button_filter_list_add, "clicked", G_CALLBACK(filter_list_add_clicked_cb), self);
+  gtk_box_pack_start(GTK_BOX(hbox), button_filter_list_add, FALSE, FALSE, 2);
+  gtk_widget_show(button_filter_list_add);
 
-  self->blacklist_entry = gtk_entry_new();
-  gtk_box_pack_start(GTK_BOX(hbox), self->blacklist_entry, TRUE, TRUE, 0);
-  gtk_widget_show(self->blacklist_entry);
+  self->filter_list_entry = gtk_entry_new();
+  gtk_box_pack_start(GTK_BOX(hbox), self->filter_list_entry, TRUE, TRUE, 0);
+  gtk_widget_show(self->filter_list_entry);
 
   entry_completion = gtk_entry_completion_new();
   entry_list = gtk_list_store_new(1, G_TYPE_STRING);
   gtk_entry_completion_set_model(entry_completion, GTK_TREE_MODEL(entry_list));
   gtk_entry_completion_set_text_column(entry_completion, 0);
   gtk_entry_completion_set_minimum_key_length(entry_completion, 0);
-  gtk_entry_set_completion(GTK_ENTRY(self->blacklist_entry), entry_completion);
+  gtk_entry_set_completion(GTK_ENTRY(self->filter_list_entry), entry_completion);
   /* When we focus the entry, emit the changed signal so we get the hints immediately */
-  /* also update the blacklist hints from gsettings */
-  g_signal_connect(self->blacklist_entry, "focus-in-event", G_CALLBACK(blacklist_entry_focus_in_cb), self);
+  /* also update the filter list hints from gsettings */
+  g_signal_connect(self->filter_list_entry, "focus-in-event", G_CALLBACK(filter_list_entry_focus_in_cb), self);
 }
 
 static void
