@@ -31,5 +31,10 @@
       <summary>Maximum number of visible items</summary>
       <description>The indicator will only display at most the number of notifications indicated by this value.</description>
     </key>
+    <key name="swap-clear-settings" type="b">
+      <default>false</default>
+      <summary>Swap the Clear and Settings items in the menu</summary>
+      <description>This will move the Clear option to the bottom of the menu, below the Settings item.</description>
+    </key>
   </schema>
 </schemalist>
