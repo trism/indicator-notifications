@@ -64,6 +64,7 @@ struct _IndicatorNotificationsPrivate {
   gboolean     do_not_disturb;
   gboolean     have_unread;
   gboolean     hide_indicator;
+  gboolean     swap_clear_settings;
 
   gint         max_items;
 
@@ -127,6 +128,7 @@ static void save_filter_list_hints(IndicatorNotifications *self);
 static void update_filter_list_hints(IndicatorNotifications *self, Notification *notification);
 static void update_do_not_disturb(IndicatorNotifications *self);
 static void settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value);
+static void swap_clear_settings_items(IndicatorNotifications *self);
 
 /* Callbacks */
 static void clear_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data);
@@ -216,7 +218,13 @@ indicator_notifications_init(IndicatorNotifications *self)
   self->priv->do_not_disturb = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_DND);
   self->priv->hide_indicator = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_HIDE_INDICATOR);
   self->priv->max_items = g_settings_get_int(self->priv->settings, NOTIFICATIONS_KEY_MAX_ITEMS);
+  self->priv->swap_clear_settings = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_SWAP_CLEAR_SETTINGS);
+
   update_filter_list(self);
+
+  if(self->priv->swap_clear_settings)
+    swap_clear_settings_items(self);
+
   g_signal_connect(self->priv->settings, "changed", G_CALLBACK(setting_changed_cb), self);
 
   /* Set up filter list hints */
@@ -691,6 +699,27 @@ settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value)
 }
 
 /**
+ * swap_clear_settings_items:
+ * @self: the indicator object
+ *
+ * Swaps the position of the clear and settings items.
+ **/
+static void
+swap_clear_settings_items(IndicatorNotifications *self)
+{
+  g_return_if_fail(IS_INDICATOR_NOTIFICATIONS(self));
+
+  // Pick which widget to move
+  GtkWidget *widget = self->priv->settings_item;
+  if(self->priv->swap_clear_settings)
+    widget = self->priv->clear_item;
+
+  gtk_container_remove(GTK_CONTAINER(self->priv->menu), g_object_ref(widget));
+  gtk_menu_shell_append(GTK_MENU_SHELL(self->priv->menu), widget);
+  g_object_unref(widget);
+}
+
+/**
  * clear_item_activated_cb:
  * @menuitem: the clear menuitem
  * @user_data: the indicator object
@@ -763,6 +792,10 @@ setting_changed_cb(GSettings *settings, gchar *key, gpointer user_data)
   }
   else if(g_strcmp0(key, NOTIFICATIONS_KEY_FILTER_LIST) == 0) {
     update_filter_list(self);
+  }
+  else if(g_strcmp0(key, NOTIFICATIONS_KEY_SWAP_CLEAR_SETTINGS) == 0) {
+    self->priv->swap_clear_settings = g_settings_get_boolean(self->priv->settings, NOTIFICATIONS_KEY_SWAP_CLEAR_SETTINGS);
+    swap_clear_settings_items(self);
   }
   /* TODO: Trim or extend the notifications list based on "max-items" key
    * (Currently requires a restart) */
