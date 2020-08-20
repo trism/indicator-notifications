@@ -84,9 +84,6 @@ struct _IndicatorNotificationsPrivate {
   GSettings   *settings;
 };
 
-#define INDICATOR_NOTIFICATIONS_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), INDICATOR_NOTIFICATIONS_TYPE, IndicatorNotificationsPrivate))
-
 #include "settings.h"
 
 #define INDICATOR_ICON_SIZE 22
@@ -142,14 +139,12 @@ static void settings_item_activated_cb(GtkMenuItem *menuitem, gpointer user_data
 INDICATOR_SET_VERSION
 INDICATOR_SET_TYPE(INDICATOR_NOTIFICATIONS_TYPE)
 
-G_DEFINE_TYPE(IndicatorNotifications, indicator_notifications, INDICATOR_OBJECT_TYPE);
+G_DEFINE_TYPE_WITH_PRIVATE(IndicatorNotifications, indicator_notifications, INDICATOR_OBJECT_TYPE);
 
 static void
 indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private(klass, sizeof(IndicatorNotificationsPrivate));
 
   object_class->dispose = indicator_notifications_dispose;
   object_class->finalize = indicator_notifications_finalize;
@@ -167,7 +162,7 @@ indicator_notifications_class_init(IndicatorNotificationsClass *klass)
 static void
 indicator_notifications_init(IndicatorNotifications *self)
 {
-  self->priv = INDICATOR_NOTIFICATIONS_GET_PRIVATE(self);
+  self->priv = indicator_notifications_get_instance_private(self);
 
   self->priv->menu = NULL;
 

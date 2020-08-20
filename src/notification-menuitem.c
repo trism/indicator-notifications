@@ -37,7 +37,7 @@ static gboolean widget_contains_event(GtkWidget *widget, GdkEventButton *event);
 
 static guint notification_menuitem_signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (NotificationMenuItem, notification_menuitem, GTK_TYPE_MENU_ITEM);
+G_DEFINE_TYPE_WITH_PRIVATE(NotificationMenuItem, notification_menuitem, GTK_TYPE_MENU_ITEM);
 
 static void
 notification_menuitem_class_init(NotificationMenuItemClass *klass)
@@ -49,8 +49,6 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
   widget_class->motion_notify_event = notification_menuitem_motion;
   widget_class->button_press_event = notification_menuitem_button_press;
   widget_class->button_release_event = notification_menuitem_button_release;
-
-  g_type_class_add_private(klass, sizeof(NotificationMenuItemPrivate));
 
   menu_item_class->hide_on_activate = FALSE;
   menu_item_class->activate = notification_menuitem_activate;
@@ -73,7 +71,7 @@ notification_menuitem_class_init(NotificationMenuItemClass *klass)
 static void
 notification_menuitem_init(NotificationMenuItem *self)
 {
-  self->priv = NOTIFICATION_MENUITEM_GET_PRIVATE(self);
+  self->priv = notification_menuitem_get_instance_private(self);
 
   self->priv->pressed_close_image = FALSE;
 

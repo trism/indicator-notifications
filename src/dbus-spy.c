@@ -33,14 +33,12 @@ static gboolean idle_message_emit(gpointer user_data);
 
 #define MATCH_STRING "eavesdrop=true,type='method_call',interface='org.freedesktop.Notifications',member='Notify'"
 
-G_DEFINE_TYPE (DBusSpy, dbus_spy, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(DBusSpy, dbus_spy, G_TYPE_OBJECT);
 
 static void
 dbus_spy_class_init(DBusSpyClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-  g_type_class_add_private(klass, sizeof(DBusSpyPrivate));
 
   object_class->dispose = dbus_spy_dispose;
 
@@ -150,7 +148,7 @@ idle_message_emit(gpointer user_data)
 static void
 dbus_spy_init(DBusSpy *self)
 {
-  self->priv = DBUS_SPY_GET_PRIVATE(self);
+  self->priv = dbus_spy_get_instance_private(self);
 
   self->priv->connection = NULL;
   self->priv->connection_cancel = g_cancellable_new();

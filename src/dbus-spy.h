@@ -42,9 +42,6 @@ struct _DBusSpyPrivate {
   GCancellable *connection_cancel;
 };
 
-#define DBUS_SPY_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_SPY_TYPE, DBusSpyPrivate))
-
 #define DBUS_SPY_SIGNAL_MESSAGE_RECEIVED "message-received"
 
 GType    dbus_spy_get_type(void);

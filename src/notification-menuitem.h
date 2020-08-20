@@ -41,9 +41,6 @@ struct _NotificationMenuItemPrivate {
   gboolean pressed_close_image;
 };
 
-#define NOTIFICATION_MENUITEM_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), NOTIFICATION_MENUITEM_TYPE, NotificationMenuItemPrivate))
-
 #define NOTIFICATION_MENUITEM_SIGNAL_CLICKED "clicked"
 
 GType      notification_menuitem_get_type(void);

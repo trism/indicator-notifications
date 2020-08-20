@@ -22,14 +22,12 @@ static void notification_class_init(NotificationClass *klass);
 static void notification_init(Notification *self);
 static void notification_dispose(GObject *object);
 
-G_DEFINE_TYPE (Notification, notification, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(Notification, notification, G_TYPE_OBJECT);
 
 static void
 notification_class_init(NotificationClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-  g_type_class_add_private(klass, sizeof(NotificationPrivate));
 
   object_class->dispose = notification_dispose;
 }
@@ -37,7 +35,7 @@ notification_class_init(NotificationClass *klass)
 static void
 notification_init(Notification *self)
 {
-  self->priv = NOTIFICATION_GET_PRIVATE(self);
+  self->priv = notification_get_instance_private(self);
 
   self->priv->app_name = NULL;
   self->priv->replaces_id = 0;

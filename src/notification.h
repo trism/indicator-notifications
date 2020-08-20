@@ -49,9 +49,6 @@ struct _NotificationPrivate {
   gboolean   is_private;
 };
 
-#define NOTIFICATION_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), NOTIFICATION_TYPE, NotificationPrivate))
-
 GType         notification_get_type(void);
 Notification *notification_new(void);
 Notification *notification_new_from_dbus_message(GDBusMessage *);
