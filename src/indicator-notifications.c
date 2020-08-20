@@ -674,7 +674,7 @@ settings_try_set_boolean(const gchar *schema, const gchar *key, gboolean value)
   }
 
   /* Lookup the schema */
-  GSettingsSchema *source_schema = g_settings_schema_source_lookup(source, schema, FALSE);
+  GSettingsSchema *source_schema = g_settings_schema_source_lookup(source, schema, TRUE);
 
   /* Couldn't find the schema */
   if (source_schema == NULL) {
